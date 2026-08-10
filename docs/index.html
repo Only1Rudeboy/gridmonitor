@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f15">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<title>Grid Monitor</title>
+<style>
+  :root{
+    --bg:#0b0f15; --bg2:#070a0f; --surface:#131a24; --surface2:#1a2331; --row:#161e2a;
+    --line:#222c3b; --text:#e7eef8; --dim:#7d8b9e; --faint:#3a4759;
+    --blue:#4c8dff; --cyan:#2dd4bf; --green:#3ddc97; --amber:#f5b342; --red:#ff6b7a;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent}
+  html,body{overflow-x:hidden}
+  body{
+    background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%);
+    color:var(--text); font-family:"Segoe UI",Roboto,system-ui,sans-serif;
+    padding:10px 10px calc(14px + env(safe-area-inset-bottom));
+    max-width:520px; margin:0 auto; min-height:100vh;
+  }
+  header{display:flex; align-items:center; gap:10px; padding:8px 4px 12px}
+  .logo{width:30px;height:30px;border:2px solid var(--blue);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;color:var(--blue);font-size:15px}
+  header h1{font-size:17px;font-weight:600}
+  header .sub{font-size:10px;color:var(--dim)}
+  #status{margin-left:auto;font-size:10px;color:var(--dim);background:var(--surface2);
+    border:1px solid var(--line);border-radius:12px;padding:5px 10px;display:flex;
+    align-items:center;gap:6px;white-space:nowrap}
+  #statusdot{width:7px;height:7px;border-radius:50%;background:var(--faint)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+    padding:14px;margin-bottom:10px}
+  .card h2{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--dim);
+    text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+  .card h2 .led{width:6px;height:6px;border-radius:50%;background:var(--cyan)}
+  .card h2 .note{margin-left:auto;font-weight:400;letter-spacing:0;color:var(--faint);
+    text-transform:none}
+  /* Hero */
+  #hero{position:relative;text-align:center}
+  #ringwrap{position:relative;width:230px;height:210px;margin:0 auto}
+  #ring{width:230px;height:210px}
+  #price{position:absolute;left:0;right:0;top:58px;line-height:1}
+  #price .int{font-size:64px;font-weight:200}
+  #price .dec{font-size:26px;font-weight:200;color:#b9c4d4;vertical-align:28px;margin-left:2px}
+  #price .unit{display:block;font-size:12px;color:var(--dim);margin-top:6px}
+  #ratechip{display:inline-block;margin-top:2px;font-size:11px;font-weight:700;
+    padding:5px 16px;border-radius:14px;border:1px solid}
+  #trend{display:flex;justify-content:space-between;font-size:11px;color:var(--dim);
+    margin-top:12px}
+  #countdown{font-family:Consolas,monospace;color:var(--faint)}
+  /* Fenster */
+  .fwin{display:flex;align-items:center;gap:10px;padding:8px 0}
+  .fwin + .fwin{border-top:1px solid var(--line)}
+  .fday{font-size:8.5px;font-weight:700;letter-spacing:.04em;color:var(--dim);
+    background:var(--surface2);border:1px solid var(--line);border-radius:8px;
+    padding:5px 0;flex:none;width:58px;text-align:center}
+  .fmid{flex:1;min-width:0}
+  .ft{font-size:19px;font-weight:200}
+  .fm{font-size:9.5px;color:var(--dim);margin-top:2px}
+  .fh{font-size:11px;color:var(--faint)}
+  .fbadge2{border-radius:10px;padding:5px 11px;text-align:center;font-size:13px;flex:none}
+  .fbadge2 small{display:block;font-size:8px;color:var(--dim)}
+  .fbadge2.best{border:1px solid var(--green);color:var(--green);background:rgba(61,220,151,.08)}
+  .fbadge2.alt{border:1px solid var(--line);color:var(--dim)}
+  .kpis{display:flex;margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+  .kpi{flex:1;text-align:center;border-left:1px solid var(--line)}
+  .kpi:first-child{border-left:none}
+  .kpi .l{font-size:8px;color:var(--faint);letter-spacing:.05em}
+  .kpi .v{font-size:16px;font-weight:200;margin:2px 0}
+  .kpi .m{font-size:8px;color:var(--dim)}
+  /* Chart */
+  #tipbar{display:flex;justify-content:space-between;align-items:baseline;
+    background:var(--surface2);border:1px solid var(--line);border-radius:9px;
+    padding:6px 10px;margin-bottom:8px;font-size:11px;color:var(--dim)}
+  #tipbar b{font-size:14px;font-weight:600}
+  canvas.plot{width:100%;touch-action:pan-y}
+  /* Raster */
+  .rasterrow{display:flex;align-items:center;gap:1px;margin-bottom:4px}
+  .rasterrow .rl{width:44px;font-size:9px;font-weight:700;color:var(--dim);flex:none}
+  .cell{flex:1;min-width:0;overflow:hidden;height:30px;border-radius:3px;display:flex;
+    align-items:center;justify-content:center;font-size:7px;font-weight:700;
+    color:#07110c;background:var(--surface2)}
+  .cell.now{outline:2px solid var(--blue);outline-offset:-1px}
+  .rasterhours{display:flex;gap:1px;margin-left:45px;font-size:8px;color:var(--faint)}
+  .rasterhours span{flex:1;min-width:0;text-align:center}
+  .leer{font-size:10px;color:var(--faint);flex:24;text-align:center}
+  /* Slots */
+  .slot{display:flex;align-items:center;gap:8px;background:var(--row);border-radius:9px;
+    padding:7px 10px;margin-bottom:5px;border-left:3px solid var(--faint)}
+  .slot.win{background:rgba(61,220,151,.09)}
+  .slot .z{font-size:13px;width:44px}
+  .slot .bar{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+  .slot .bar i{display:block;height:100%;border-radius:3px}
+  .slot .p{font-size:13px;width:52px;text-align:right}
+  .daysep{font-size:9px;font-weight:700;color:var(--faint);margin:8px 0 5px 4px}
+  /* Teile */
+  #stack{display:flex;height:16px;border-radius:5px;overflow:hidden;gap:1px;margin-bottom:10px}
+  #stack i{display:block;height:100%}
+  .part{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dim);
+    padding:4px 0}
+  .part .sw{width:8px;height:8px;border-radius:2px;flex:none}
+  .part .pv{margin-left:auto;color:var(--text)}
+  .part .pp{width:34px;text-align:right;color:var(--faint);font-size:10px}
+  #ptotal{display:flex;justify-content:space-between;border-top:1px solid var(--line);
+    margin-top:8px;padding-top:8px;font-size:12px;color:var(--dim)}
+  #ptotal b{font-size:15px;font-weight:600}
+  /* Historie */
+  #histsum{font-size:10px;color:var(--dim);margin-top:6px;line-height:1.6}
+  #histsum .sp{color:var(--cyan)}
+  footer{display:flex;gap:10px;padding:2px 0 10px}
+  .abtn{flex:1;display:flex;align-items:center;gap:11px;background:var(--surface);
+    border:1px solid var(--line);border-radius:14px;padding:11px 14px;
+    color:var(--text);text-align:left;font-family:inherit}
+  .abtn:active{background:var(--surface2)}
+  .abtn .bicon{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;
+    justify-content:center;font-size:15px;flex:none}
+  .abtn b{display:block;font-size:12.5px;font-weight:600}
+  .abtn small{display:block;font-size:9px;color:var(--dim);margin-top:2px}
+  #tarifbtn .bicon{background:rgba(76,141,255,.15);color:var(--blue)}
+  #reload .bicon{background:rgba(45,212,191,.15);color:var(--cyan)}
+  #sponsor{text-align:center;font-size:10px;color:var(--dim);padding:0 10px 8px}
+  .hidden{display:none}
+  /* Tarif-Dialog */
+  #tarifdlg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;
+    display:flex;align-items:center;justify-content:center;padding:20px}
+  #tarifdlg.hidden{display:none}
+  .dlg{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+    padding:18px;width:100%;max-width:340px}
+  .dlg h3{font-size:14px;margin-bottom:12px}
+  .dlg label{display:flex;align-items:center;justify-content:space-between;
+    font-size:11px;color:var(--dim);margin-bottom:8px;gap:10px}
+  .dlg input{width:90px;background:var(--surface2);border:1px solid var(--line);
+    color:var(--text);border-radius:8px;padding:7px 9px;font-size:13px;text-align:right}
+  .dlgrow{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+  .dlgrow button{border-radius:9px;padding:9px 16px;font-size:12px;border:1px solid var(--line);
+    background:var(--surface2);color:var(--dim)}
+  .dlgrow button.primary{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
+  .dlgnote{font-size:9px;color:var(--faint);margin-top:10px;line-height:1.5}
+  #attrib{text-align:center;font-size:9px;color:var(--faint);padding:2px 10px 8px}
+  #stale{background:rgba(245,179,66,.12);border:1px solid var(--amber);color:var(--amber);
+    border-radius:10px;padding:9px 12px;font-size:11px;margin-bottom:10px}
+  .cost{display:flex;align-items:baseline;font-size:12px;padding:6px 0;
+    border-bottom:1px solid var(--line)}
+  .cost:last-child{border-bottom:none}
+  .cost .k{color:var(--faint);font-size:9px;margin-left:6px}
+  .cost .now{margin-left:auto;width:76px;text-align:right}
+  .cost .win{width:86px;text-align:right;color:var(--green)}
+  #costnote{font-size:9px;color:var(--faint);margin-top:8px}
+  .dlg input[type=checkbox]{width:auto;accent-color:var(--blue)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">⚡</div>
+  <div><h1>Grid Monitor</h1><div class="sub">Dynamischer Strompreis · Österreich</div></div>
+  <div id="status"><span id="statusdot"></span><span id="statustxt">lädt …</span></div>
+</header>
+
+<div id="stale" class="hidden">⚠</div>
+<div class="card" id="heroCard">
+  <h2><span class="led" id="heroled"></span>Preis jetzt</h2>
+  <div id="hero">
+    <div id="ringwrap">
+      <canvas id="ring"></canvas>
+      <div id="price"><span class="int">–</span><span class="dec"></span>
+        <span class="unit">ct / kWh · brutto</span></div>
+    </div>
+    <span id="ratechip">…</span>
+    <div id="trend"><span id="trendtxt"></span><span id="countdown"></span></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2><span class="led" style="background:var(--green)"></span>Bestes Ladefenster
+      <span class="note" id="fhours"></span></h2>
+  <div id="fwins"></div>
+  <div class="kpis" id="kpis"></div>
+</div>
+
+<div class="card">
+  <h2><span class="led" style="background:var(--blue)"></span>Preisverlauf
+      <span class="note">heute &amp; morgen · tippen für Details</span></h2>
+  <div id="tipbar"><span id="tipzeit">–</span><b id="tippreis">–</b><span id="tipboerse"></span></div>
+  <canvas id="chart" class="plot"></canvas>
+</div>
+
+<div class="card">
+  <h2><span class="led"></span>Stundenraster · Ø ct/kWh</h2>
+  <div class="rasterrow"><span class="rl">HEUTE</span><span id="rheute" style="display:contents"></span></div>
+  <div class="rasterrow"><span class="rl">MORGEN</span><span id="rmorgen" style="display:contents"></span></div>
+  <div class="rasterhours" id="rhours"></div>
+</div>
+
+<div class="card">
+  <h2><span class="led" style="background:var(--blue)"></span>Nächste Slots</h2>
+  <div id="slots"></div>
+</div>
+
+<div class="card">
+  <h2><span class="led" style="background:var(--blue)"></span>Woraus der Preis besteht
+      <span class="note">jetzt</span></h2>
+  <div id="stack"></div>
+  <div id="parts"></div>
+  <div id="ptotal"><span>Gesamt brutto</span><b id="ptotalv">–</b></div>
+</div>
+
+<div class="card" id="costCard">
+  <h2><span class="led" style="background:var(--amber)"></span>Was kostet das jetzt?</h2>
+  <div id="costs"></div>
+  <div id="costnote"></div>
+</div>
+
+<div class="card" id="histCard">
+  <h2><span class="led"></span>Preis-Historie · 30 Tage</h2>
+  <canvas id="hist" class="plot"></canvas>
+  <div id="histsum"></div>
+</div>
+
+<footer>
+  <button id="tarifbtn" class="abtn"><span class="bicon">⚙</span>
+    <span><b>Mein Tarif</b><small>Aufschlag · Netzentgelt · MwSt</small></span></button>
+  <button id="reload" class="abtn"><span class="bicon">⟳</span>
+    <span><b>Aktualisieren</b><small id="updated">–</small></span></button>
+</footer>
+<div id="attrib"></div>
+<div id="sponsor">Unterstützt von OSMOVOLTAIK e.U.</div>
+<div id="tarifdlg" class="hidden">
+  <div class="dlg">
+    <h3>⚙ Mein Tarif</h3>
+    <label>Aufschlag (ct/kWh)<input id="t_auf" inputmode="decimal"></label>
+    <label>Netzentgelt (ct/kWh)<input id="t_netz" inputmode="decimal"></label>
+    <label>MwSt (%)<input id="t_mwst" inputmode="decimal"></label>
+    <label>Schwelle günstig (ct)<input id="t_bil" inputmode="decimal"></label>
+    <label>Schwelle teuer (ct)<input id="t_teu" inputmode="decimal"></label>
+    <label>Ladefenster (Stunden)<input id="t_std" inputmode="numeric"></label>
+    <label>Lademenge (kWh)<input id="t_kwh" inputmode="decimal"></label>
+    <label id="t_notirow" class="hidden">Meldung, wenn das Ladefenster beginnt
+      <input type="checkbox" id="t_noti"></label>
+    <div class="dlgrow">
+      <button id="t_cancel">Abbrechen</button>
+      <button id="t_save" class="primary">Speichern</button>
+    </div>
+    <p class="dlgnote">Formel: (Börsenpreis + Aufschlag) × MwSt + Netzentgelt.
+    Aufschlag und Netzentgelt stehen auf deiner Stromrechnung
+    (VKW Strom dynamisch: 1,20 · Netz je nach Region).</p>
+  </div>
+</div>
+<div id="apkrow" class="hidden" style="text-align:center;padding:6px 0 10px">
+  <a id="apklink" href="/app.apk" style="color:var(--cyan);font-size:12px;
+     text-decoration:none">📲 Android-App herunterladen (APK)</a>
+</div>
+
+<script>
+"use strict";
+/* ==================== Konfiguration (wird vom PC-Widget überschrieben) ==================== */
+const DEFAULTS = {
+  aufschlag_ct: 1.20, netzentgelt_ct: 4.36, mwst: 1.20,
+  price_cheap: 12.0, price_expensive: 30.0, best_window_hours: 3, charge_kwh: 11.0,
+};
+const HUB = "https://only1rudeboy.github.io/gridmonitor";                 // Daten-Verteiler (GitHub Pages)
+const APK_URL = "https://github.com/Only1Rudeboy/gridmonitor/releases/latest/download/GridMonitor.apk";             // öffentlicher App-Download
+let CFG = {};
+function pushTarif() {
+  try {                                   // Tarif an die Android-App für Meldungen
+    if (window.AndroidBridge && AndroidBridge.setTarif)
+      AndroidBridge.setTarif(JSON.stringify({
+        aufschlag_ct: CFG.aufschlag_ct, netzentgelt_ct: CFG.netzentgelt_ct,
+        mwst: CFG.mwst, best_window_hours: CFG.best_window_hours,
+        notify_window: CFG.notify_window !== false}));
+  } catch (e) {}
+}
+function rebuildCfg() {
+  CFG = Object.assign({}, DEFAULTS);
+  try { Object.assign(CFG, JSON.parse(localStorage.gmCfg || "{}")); } catch (e) {}
+  try { Object.assign(CFG, JSON.parse(localStorage.gmTarif || "{}")); } catch (e) {}
+  pushTarif();
+}
+rebuildCfg();
+
+const $ = id => document.getElementById(id);
+const de = (v, n = 2) => v.toFixed(n).replace(".", ",");
+const hm = t => t.toLocaleTimeString("de-AT", {hour: "2-digit", minute: "2-digit"});
+const eff = epex => Math.round(((epex + CFG.aufschlag_ct) * CFG.mwst + CFG.netzentgelt_ct) * 100) / 100;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const COL = {};
+for (const n of ["surface","surface2","row","line","text","dim","faint","blue","cyan","green","amber","red"])
+  COL[n] = css("--" + n);
+
+function mixc(a, b, t) {
+  const pa = a.match(/\w\w/g).map(x => parseInt(x, 16));
+  const pb = b.match(/\w\w/g).map(x => parseInt(x, 16));
+  return "#" + pa.map((v, i) => Math.round(v + (pb[i] - v) * t).toString(16).padStart(2, "0")).join("");
+}
+function priceColor(v) {
+  const lo = CFG.price_cheap, hi = CFG.price_expensive, mid = (lo + hi) / 2;
+  if (v <= lo) return COL.green;
+  if (v >= hi) return COL.red;
+  if (v <= mid) return mixc(COL.green, COL.amber, (v - lo) / Math.max(.1, mid - lo));
+  return mixc(COL.amber, COL.red, (v - mid) / Math.max(.1, hi - mid));
+}
+function rating(v) {
+  if (v <= CFG.price_cheap) return [COL.green, "GÜNSTIG"];
+  if (v >= CFG.price_expensive) return [COL.red, "TEUER"];
+  return [COL.amber, "NORMAL"];
+}
+
+/* ==================== Daten laden: PC-Widget → aWATTAR → Cache ==================== */
+let S = null;            // aktueller Auswertungs-Stand
+let HIST = [];           // Tagesstatistiken vom PC-Widget (brutto, fertig)
+let HISTRAW = null;      // Roh-Historie vom Verteiler (Börsenpreise je Tag)
+let LASTRAW = null;      // zuletzt geladene Roh-Preisliste
+let sourceName = "—", sourceMode = "—";
+function process() {     // Brutto immer clientseitig aus dem eigenen Tarif rechnen
+  if (!LASTRAW) return;
+  analyse(LASTRAW.map(p => ({start: new Date(p.start), epex: p.epex,
+    effective: eff(p.epex), res: p.res})));
+  renderAll();
+}
+
+function serverBase() {
+  if (location.protocol !== "file:") return "";     // vom PC-Widget ausgeliefert
+  return localStorage.gmServer || "";               // App: direkt Cloud-Verteiler
+}
+async function fetchWidget() {
+  const base = serverBase();
+  if (location.protocol === "file:" && !base) throw new Error("kein PC-Server eingestellt");
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 4000);
+  try {
+    const r = await fetch(base + "/api/data", {signal: ctl.signal, cache: "no-store"});
+    if (!r.ok) throw new Error(r.status);
+    return await r.json();
+  } finally { clearTimeout(timer); }
+}
+async function fetchHub() {
+  const onHub = location.host.endsWith("github.io");
+  if (!onHub && (!HUB || HUB.startsWith("__"))) throw new Error("kein Verteiler");
+  const base = onHub ? "." : HUB;
+  const r = await fetch(base + "/prices.json", {cache: "no-store"});
+  if (!r.ok) throw new Error(r.status);
+  const p = await r.json();
+  let rawHist = null;
+  try {
+    const rh = await fetch(base + "/history.json", {cache: "no-store"});
+    if (rh.ok) rawHist = (await rh.json()).days || null;
+  } catch (e) {}
+  return {source: p.source, config: null, prices: p.prices,
+          rawHistory: rawHist, attribution: p.attribution || ""};
+}
+async function fetchAwattar() {
+  const now = Date.now();
+  const r = await fetch("https://api.awattar.at/v1/marketdata?start=" +
+    (now - 864e5) + "&end=" + (now + 2 * 864e5), {cache: "no-store"});
+  const j = await r.json();
+  return {
+    source: "aWATTAR", config: null, window: null, history: null,
+    prices: j.data.map(e => ({start: new Date(e.start_timestamp).toISOString(),
+      epex: e.marketprice / 10,
+      res: Math.round((e.end_timestamp - e.start_timestamp) / 60000)})),
+  };
+}
+async function loadData() {
+  setStatus(COL.faint, "lädt …");
+  let payload = null;
+  try { payload = await fetchWidget(); sourceMode = "PC-Widget"; }
+  catch (e) {
+    try { payload = await fetchHub(); sourceMode = "Verteiler"; }
+    catch (e1) {
+      try { payload = await fetchAwattar(); sourceMode = "direkt"; }
+      catch (e2) {
+        const cached = localStorage.gmData;
+        if (cached) { payload = JSON.parse(cached); sourceMode = "Cache"; }
+      }
+    }
+  }
+  if (!payload || !payload.prices || !payload.prices.length) {
+    setStatus(COL.red, "offline — keine Daten");
+    return;
+  }
+  if (payload.config) {
+    localStorage.gmCfg = JSON.stringify(payload.config);
+    rebuildCfg();
+  }
+  if (payload.history) {                  // PC-Widget: fertige Brutto-Statistiken
+    HIST = payload.history; HISTRAW = null;
+    localStorage.gmHist = JSON.stringify(HIST);
+  } else if (payload.rawHistory) {        // Verteiler: Rohdaten, Brutto kommt vom Tarif
+    HISTRAW = payload.rawHistory; HIST = null;
+    try { localStorage.gmHistRaw = JSON.stringify(HISTRAW); } catch (e) {}
+  } else {
+    try { HISTRAW = JSON.parse(localStorage.gmHistRaw || "null"); } catch (e) { HISTRAW = null; }
+    if (!HISTRAW) { try { HIST = JSON.parse(localStorage.gmHist || "[]"); } catch (e) { HIST = []; } }
+  }
+  try { localStorage.gmData = JSON.stringify(payload); } catch (e) {}
+  sourceName = payload.source || "?";
+  LASTRAW = payload.prices;
+  process();
+  if (payload.attribution) $("attrib").textContent = payload.attribution;
+  const res = S.pts.length && S.pts[0].res <= 15 ? "15 min" : "stündlich";
+  setStatus(sourceMode === "Cache" ? COL.amber : COL.green,
+    sourceName + " · " + res);
+  $("updated").textContent = "Stand " + hm(new Date());
+  const gen = payload.generated ? new Date(payload.generated) : new Date();
+  if ((Date.now() - gen) / 36e5 > 6) {
+    $("stale").textContent = "⚠ Daten vom " + gen.toLocaleString("de-AT",
+      {day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"}) +
+      " — neuere Preise derzeit nicht abrufbar";
+    $("stale").classList.remove("hidden");
+  } else {
+    $("stale").classList.add("hidden");
+  }
+  if (!window.AndroidBridge) {
+    if (location.host.endsWith("github.io") && !APK_URL.startsWith("__")) {
+      $("apklink").href = APK_URL;
+      $("apkrow").classList.remove("hidden");
+    } else if (payload.apk && location.protocol !== "file:") {
+      $("apkrow").classList.remove("hidden");
+    }
+  }
+}
+function setStatus(color, txt) {
+  $("statusdot").style.background = color;
+  $("statustxt").textContent = txt;
+}
+
+/* ==================== Auswertung (Port der Widget-Logik) ==================== */
+const slotEnd = p => new Date(p.start.getTime() + p.res * 60000);
+function bestWindow(future, hours) {
+  const target = hours * 60;
+  let best = null;
+  for (let i = 0; i < future.length; i++) {
+    let mins = 0, tot = 0, j = i;
+    while (j < future.length && mins < target) {
+      if (j > i && future[j].start.getTime() !== slotEnd(future[j - 1]).getTime()) break;
+      mins += future[j].res; tot += future[j].effective * future[j].res; j++;
+    }
+    if (mins < target) { if (j >= future.length) break; continue; }
+    const avg = tot / mins;
+    if (!best || avg < best.avg)
+      best = {start: future[i].start, end: slotEnd(future[j - 1]), avg: Math.round(avg * 100) / 100};
+  }
+  return best;
+}
+function analyse(prices) {
+  prices.sort((a, b) => a.start - b.start);
+  const now = new Date();
+  const day = now.toDateString();
+  const tomorrow = new Date(now.getTime() + 864e5).toDateString();
+  const s = {prices, now};
+  s.cur = prices.find(p => p.start <= now && now < slotEnd(p)) || null;
+  s.future = prices.filter(p => slotEnd(p) > now);
+  s.nxt = s.future.find(p => !s.cur || p.start > s.cur.start) || null;
+  s.today = prices.filter(p => p.start.toDateString() === day);
+  s.tomorrow = prices.filter(p => p.start.toDateString() === tomorrow);
+  s.pts = s.today.concat(s.tomorrow);
+  const pool = s.today.length ? s.today : prices;
+  const effs = pool.map(p => p.effective);
+  s.vmin = Math.min(...effs); s.vmax = Math.max(...effs);
+  s.vavg = effs.reduce((a, b) => a + b, 0) / effs.length;
+  s.pmin = pool.reduce((a, b) => b.effective < a.effective ? b : a);
+  s.pmax = pool.reduce((a, b) => b.effective > a.effective ? b : a);
+  s.hoursToday = {}; s.hoursTomorrow = {};
+  for (const [list, target] of [[s.today, s.hoursToday], [s.tomorrow, s.hoursTomorrow]]) {
+    const acc = {};
+    for (const p of list) (acc[p.start.getHours()] = acc[p.start.getHours()] || []).push(p.effective);
+    for (const h in acc) target[h] = acc[h].reduce((a, b) => a + b, 0) / acc[h].length;
+  }
+  s.window = bestWindow(s.future, CFG.best_window_hours);
+  s.windowToday = bestWindow(s.future.filter(p => p.start.toDateString() === day),
+                             CFG.best_window_hours);
+  s.windowTomorrow = bestWindow(s.tomorrow, CFG.best_window_hours);
+  s.nextCheap = s.future.find(p => p.start > now && p.effective <= CFG.price_cheap) || null;
+  S = s;
+}
+
+/* ==================== Canvas-Helfer ==================== */
+function setupCanvas(cv, cssH) {
+  const dpr = window.devicePixelRatio || 1;
+  const w = cv.clientWidth || cv.parentElement.clientWidth;
+  cv.style.height = cssH + "px";
+  cv.width = Math.round(w * dpr); cv.height = Math.round(cssH * dpr);
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return [ctx, w, cssH];
+}
+
+/* ==================== Hero-Ring ==================== */
+function renderHero() {
+  const cur = S.cur;
+  const [col, label] = cur ? rating(cur.effective) : [COL.faint, "KEINE DATEN"];
+  $("heroled").style.background = col;
+  const cv = $("ring");
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = 230 * dpr; cv.height = 210 * dpr;
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const cx = 115, cy = 105, r = 92, tw = 9;
+  const a0 = Math.PI * (140 / 180), spanA = Math.PI * (260 / 180);
+  ctx.lineCap = "round";
+  ctx.beginPath(); ctx.arc(cx, cy, r, a0, a0 + spanA);
+  ctx.strokeStyle = mixc(COL.surface, COL.line, .9); ctx.lineWidth = tw; ctx.stroke();
+  const lo = Math.min(0, S.vmin), hi = Math.max(S.vmax, CFG.price_expensive * 1.15);
+  for (const thr of [CFG.price_cheap, CFG.price_expensive]) {
+    const f = (thr - lo) / Math.max(.1, hi - lo);
+    if (f >= 0 && f <= 1) {
+      const a = a0 + spanA * f;
+      ctx.beginPath();
+      ctx.moveTo(cx + (r - tw * .8) * Math.cos(a), cy + (r - tw * .8) * Math.sin(a));
+      ctx.lineTo(cx + (r + tw * .8) * Math.cos(a), cy + (r + tw * .8) * Math.sin(a));
+      ctx.strokeStyle = COL.surface; ctx.lineWidth = 3; ctx.stroke();
+    }
+  }
+  if (cur) {
+    const frac = Math.max(0, Math.min(1, (cur.effective - lo) / Math.max(.1, hi - lo)));
+    const steps = 40;
+    const startCol = mixc(col, COL.surface, .45);
+    for (let i = 0; i < steps; i++) {
+      const t = i / steps;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, a0 + spanA * frac * t, a0 + spanA * frac * (i + 1.35) / steps);
+      ctx.strokeStyle = mixc(startCol, col, Math.min(1, t * 1.7));
+      ctx.lineWidth = tw; ctx.stroke();
+    }
+    const whole = Math.trunc(Math.abs(cur.effective));
+    const dec = Math.round((Math.abs(cur.effective) - whole) * 100);
+    document.querySelector("#price .int").textContent =
+      (cur.effective < 0 ? "−" : "") + whole;
+    document.querySelector("#price .dec").textContent = String(dec).padStart(2, "0");
+  } else {
+    document.querySelector("#price .int").textContent = "–";
+    document.querySelector("#price .dec").textContent = "";
+  }
+  const chip = $("ratechip");
+  chip.textContent = label; chip.style.color = col; chip.style.borderColor = col;
+  chip.style.background = col + "22";
+  if (cur && S.nxt) {
+    const d = S.nxt.effective - cur.effective;
+    const arrow = d > .15 ? "▲" : d < -.15 ? "▼" : "→";
+    const tc = d > .15 ? COL.red : d < -.15 ? COL.green : COL.dim;
+    const el = $("trendtxt");
+    el.textContent = arrow + " danach " + de(S.nxt.effective) + "  (" +
+      (d >= 0 ? "+" : "−") + de(Math.abs(d)) + ")";
+    el.style.color = tc;
+  }
+}
+function tickCountdown() {
+  if (S && S.cur) {
+    const left = Math.max(0, Math.round((slotEnd(S.cur) - new Date()) / 1000));
+    $("countdown").textContent =
+      String(Math.trunc(left / 60)).padStart(2, "0") + ":" + String(left % 60).padStart(2, "0");
+    if (left === 0) loadData();
+  }
+}
+
+/* ==================== Ladefenster + KPIs ==================== */
+function renderWindow() {
+  $("fhours").textContent = CFG.best_window_hours + " h";
+  const wt = S.windowToday, wm = S.windowTomorrow;
+  const bothBest = wt && wm ? (wt.avg <= wm.avg ? "HEUTE" : "MORGEN") : null;
+  const rows = [["HEUTE", wt], ["MORGEN", wm]];
+  $("fwins").innerHTML = rows.map(([tag, bw]) => {
+    if (!bw) {
+      const hint = tag === "MORGEN"
+        ? (S.tomorrow.length ? "Resttag kürzer als das Fenster"
+                             : "Preise erscheinen ca. ab 14 Uhr")
+        : (S.today.length ? "Resttag kürzer als " + CFG.best_window_hours + " h"
+                          : "keine Daten");
+      return `<div class="fwin"><span class="fday">${tag}</span>` +
+             `<div class="fmid"><div class="fh">${hint}</div></div></div>`;
+    }
+    const mins = (bw.start - new Date()) / 60000;
+    let meta = mins <= 0 ? "läuft jetzt" : mins < 90 ? "in " + Math.trunc(mins) + " min"
+      : "in " + de(mins / 60, 1) + " h";
+    const pool = tag === "HEUTE" ? S.today : S.tomorrow;
+    const dayAvg = pool.reduce((a, p) => a + p.effective, 0) / pool.length;
+    const saved = (dayAvg - bw.avg) * CFG.charge_kwh / 100;
+    if (saved > .005) meta += " · spart ca. " + de(saved) + " €";
+    const cls = (!bothBest || bothBest === tag) ? "best" : "alt";
+    return `<div class="fwin"><span class="fday">${tag}</span>` +
+      `<div class="fmid"><div class="ft">${hm(bw.start)} – ${hm(bw.end)}</div>` +
+      `<div class="fm">${meta}</div></div>` +
+      `<div class="fbadge2 ${cls}">Ø ${de(bw.avg)}<small>ct/kWh</small></div></div>`;
+  }).join("");
+  const k = [["MIN", de(S.vmin), hm(S.pmin.start), COL.green],
+             ["Ø HEUTE", de(S.vavg), "", COL.amber],
+             ["MAX", de(S.vmax), hm(S.pmax.start), COL.red],
+             ["SPANNE", de(S.vmax - S.vmin), "max−min", COL.cyan]];
+  $("kpis").innerHTML = k.map(([l, v, m, c]) =>
+    `<div class="kpi"><div class="l">${l}</div><div class="v" style="color:${c}">${v}</div>` +
+    `<div class="m">${m}</div></div>`).join("");
+}
+
+/* ==================== Preisverlauf ==================== */
+let chartGeo = null;
+function renderChart(selIdx) {
+  const pts = S.pts;
+  const [ctx, w, h] = setupCanvas($("chart"), 190);
+  ctx.clearRect(0, 0, w, h);
+  if (pts.length < 2) { chartGeo = null; return; }
+  const left = 26, right = 6, top = 8, bottom = 18;
+  const cw = w - left - right, ch = h - top - bottom;
+  const t0 = pts[0].start, t1 = slotEnd(pts[pts.length - 1]);
+  const total = t1 - t0;
+  let vmn = Math.min(...pts.map(p => p.effective));
+  let vmx = Math.max(...pts.map(p => p.effective));
+  if (vmx - vmn < 2) vmx = vmn + 2;
+  const m = (vmx - vmn) * .12; vmn -= m; vmx += m;
+  const X = t => left + cw * (t - t0) / total;
+  const Y = v => top + ch * (1 - (v - vmn) / (vmx - vmn));
+  chartGeo = {pts, t0, total, left, cw, top, ch, X, Y};
+  ctx.font = "9px sans-serif";
+  for (let gi = 0; gi < 5; gi++) {
+    const v = vmn + (vmx - vmn) * gi / 4;
+    ctx.strokeStyle = mixc(COL.surface, COL.line, .85); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(left, Y(v)); ctx.lineTo(left + cw, Y(v)); ctx.stroke();
+    ctx.fillStyle = COL.faint; ctx.textAlign = "right";
+    ctx.fillText(v.toFixed(0), left - 4, Y(v) + 3);
+  }
+  const bw = S.window;
+  if (bw && bw.start < t1 && bw.end > t0) {
+    ctx.fillStyle = "rgba(61,220,151,.10)";
+    ctx.fillRect(X(Math.max(bw.start, t0)), top,
+      X(Math.min(bw.end, t1)) - X(Math.max(bw.start, t0)), ch);
+  }
+  if (selIdx != null) {
+    const p = pts[selIdx];
+    ctx.fillStyle = "rgba(45,212,191,.13)";
+    ctx.fillRect(X(p.start), top, X(slotEnd(p)) - X(p.start), ch);
+  }
+  ctx.beginPath();
+  ctx.moveTo(left, top + ch);
+  for (const p of pts) { ctx.lineTo(X(p.start), Y(p.effective)); ctx.lineTo(X(slotEnd(p)), Y(p.effective)); }
+  ctx.lineTo(left + cw, top + ch); ctx.closePath();
+  ctx.fillStyle = "rgba(76,141,255,.09)"; ctx.fill();
+  for (let i = 0; i < pts.length; i++) {
+    const p = pts[i], y = Y(p.effective), col = priceColor(p.effective);
+    ctx.strokeStyle = col; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(X(p.start), y); ctx.lineTo(X(slotEnd(p)), y); ctx.stroke();
+    if (i) {
+      ctx.strokeStyle = mixc(col, COL.surface, .35); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(X(p.start), Y(pts[i - 1].effective));
+      ctx.lineTo(X(p.start), y); ctx.stroke();
+    }
+  }
+  for (const [thr, col] of [[CFG.price_cheap, COL.green], [CFG.price_expensive, COL.red]]) {
+    if (thr > vmn && thr < vmx) {
+      ctx.strokeStyle = mixc(COL.surface, col, .55); ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(left, Y(thr)); ctx.lineTo(left + cw, Y(thr)); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+  const mid = new Date(t0); mid.setHours(24, 0, 0, 0);
+  if (mid > t0 && mid < t1) {
+    ctx.strokeStyle = COL.faint; ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(X(mid), top); ctx.lineTo(X(mid), top + ch); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = COL.faint; ctx.textAlign = "left";
+    ctx.fillText("MORGEN", X(mid) + 4, top + 9);
+  }
+  const now = new Date();
+  if (now >= t0 && now <= t1) {
+    ctx.strokeStyle = COL.cyan; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(X(now), top); ctx.lineTo(X(now), top + ch); ctx.stroke();
+    ctx.fillStyle = COL.cyan; ctx.textAlign = "center";
+    ctx.fillText("JETZT", X(now), top + 9);
+  }
+  if (selIdx != null) {
+    const p = pts[selIdx];
+    const hx = (X(p.start) + X(slotEnd(p))) / 2;
+    ctx.strokeStyle = mixc(COL.surface, COL.cyan, .75); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(hx, top); ctx.lineTo(hx, top + ch); ctx.stroke();
+    ctx.beginPath(); ctx.arc(hx, Y(p.effective), 4, 0, 7);
+    ctx.fillStyle = COL.surface; ctx.fill();
+    ctx.strokeStyle = priceColor(p.effective); ctx.lineWidth = 2; ctx.stroke();
+  }
+  ctx.fillStyle = COL.faint; ctx.textAlign = "center";
+  const stepH = total <= 30 * 36e5 ? 3 : 6;
+  const t = new Date(t0); t.setMinutes(0, 0, 0);
+  while (t <= t1) {
+    if (t.getHours() % stepH === 0 && X(t) >= left - 1 && X(t) <= left + cw + 1)
+      ctx.fillText(String(t.getHours()).padStart(2, "0"), X(t), top + ch + 12);
+    t.setHours(t.getHours() + 1);
+  }
+}
+function updateTipbar(p) {
+  if (!p) {
+    p = S.cur || S.pts[0];
+    if (!p) return;
+  }
+  $("tipzeit").textContent = hm(p.start) + " – " + hm(slotEnd(p));
+  $("tippreis").textContent = de(p.effective) + " ct/kWh";
+  $("tippreis").style.color = priceColor(p.effective);
+  $("tipboerse").textContent = "Börse " + de(p.epex) + " ct";
+}
+function chartPick(clientX) {
+  if (!chartGeo) return;
+  const rect = $("chart").getBoundingClientRect();
+  const x = clientX - rect.left;
+  if (x < chartGeo.left || x > chartGeo.left + chartGeo.cw) return;
+  const tt = new Date(chartGeo.t0.getTime() + (x - chartGeo.left) / chartGeo.cw * chartGeo.total);
+  const idx = chartGeo.pts.findIndex(p => p.start <= tt && tt < slotEnd(p));
+  if (idx >= 0) { renderChart(idx); updateTipbar(chartGeo.pts[idx]); }
+}
+for (const ev of ["touchstart", "touchmove"])
+  $("chart").addEventListener(ev, e => chartPick(e.touches[0].clientX), {passive: true});
+$("chart").addEventListener("mousemove", e => chartPick(e.clientX));
+$("chart").addEventListener("touchend", () => { renderChart(null); updateTipbar(null); });
+$("chart").addEventListener("mouseleave", () => { renderChart(null); updateTipbar(null); });
+
+/* ==================== Stundenraster ==================== */
+function renderRaster() {
+  const nowH = new Date().getHours();
+  const mk = (data, markNow) => {
+    if (!Object.keys(data).length)
+      return '<span class="leer">noch nicht veröffentlicht</span>';
+    let out = "";
+    for (let hh = 0; hh < 24; hh++) {
+      const v = data[hh];
+      const bg = v !== undefined ? priceColor(v) : "var(--surface2)";
+      const cls = markNow && hh === nowH ? "cell now" : "cell";
+      out += `<span class="${cls}" style="background:${bg}">` +
+             (v !== undefined ? Math.round(v) : "") + "</span>";
+    }
+    return out;
+  };
+  $("rheute").innerHTML = mk(S.hoursToday, true);
+  $("rmorgen").innerHTML = mk(S.hoursTomorrow, false);
+  let hrs = "";
+  for (let hh = 0; hh < 24; hh += 2) hrs += `<span>${String(hh).padStart(2, "0")}</span>`;
+  $("rhours").innerHTML = hrs;
+}
+
+/* ==================== Nächste Slots ==================== */
+function renderSlots() {
+  const up = S.future.filter(p => !S.cur || p.start > S.cur.start).slice(0, 12);
+  if (!up.length) { $("slots").innerHTML = '<div class="leer">keine Daten</div>'; return; }
+  const vals = up.map(p => p.effective);
+  const mn = Math.min(...vals), span = Math.max(.1, Math.max(...vals) - mn);
+  const bw = S.window;
+  let out = "", lastDay = null;
+  for (const p of up) {
+    const d = p.start.toDateString();
+    if (lastDay && d !== lastDay)
+      out += `<div class="daysep">${p.start.toLocaleDateString("de-AT",
+        {day: "2-digit", month: "long"}).toUpperCase()}</div>`;
+    lastDay = d;
+    const col = priceColor(p.effective);
+    const inWin = bw && p.start >= bw.start && p.start < bw.end;
+    const frac = Math.max(5, (p.effective - mn) / span * 100);
+    out += `<div class="slot${inWin ? " win" : ""}" style="border-left-color:${col}">` +
+      `<span class="z">${hm(p.start)}</span>` +
+      `<span class="bar"><i style="width:${frac}%;background:${col}"></i></span>` +
+      `<span class="p" style="color:${col}">${de(p.effective)}</span></div>`;
+  }
+  $("slots").innerHTML = out;
+}
+
+/* ==================== Preisbestandteile ==================== */
+function renderParts() {
+  const cur = S.cur;
+  if (!cur) return;
+  const energie = cur.epex + CFG.aufschlag_ct;
+  const parts = [
+    ["Börsenpreis (EPEX)", cur.epex, COL.blue],
+    ["Aufschlag", CFG.aufschlag_ct, mixc(COL.blue, COL.cyan, .55)],
+    [`MwSt ${Math.round((CFG.mwst - 1) * 100)} % auf Energie`, energie * (CFG.mwst - 1),
+      mixc(COL.cyan, COL.dim, .6)],
+    ["Netzentgelt (ohne MwSt)", CFG.netzentgelt_ct, COL.cyan]];
+  const scale = parts.reduce((a, p) => a + Math.abs(p[1]), 0) || 1;
+  $("stack").innerHTML = parts.map(([, v, c]) =>
+    `<i style="width:${Math.abs(v) / scale * 100}%;background:${v < 0 ? COL.green : c}"></i>`).join("");
+  $("parts").innerHTML = parts.map(([l, v, c]) =>
+    `<div class="part"><span class="sw" style="background:${v < 0 ? COL.green : c}"></span>${l}` +
+    `<span class="pv">${de(v)} ct</span><span class="pp">${Math.round(Math.abs(v) / scale * 100)} %</span></div>`).join("");
+  const [tc] = rating(cur.effective);
+  $("ptotalv").textContent = de(cur.effective) + " ct/kWh";
+  $("ptotalv").style.color = tc;
+}
+
+/* ==================== Kosten-Rechner ==================== */
+function renderCosts() {
+  const cur = S.cur, bw = S.window;
+  const card = $("costCard");
+  if (!cur) { card.classList.add("hidden"); return; }
+  card.classList.remove("hidden");
+  const devices = [["Waschgang", 1.2], ["Geschirrspüler", 1.1], ["Wäschetrockner", 2.5],
+                   ["Laden", CFG.charge_kwh]];
+  $("costs").innerHTML = devices.map(([name, kwh]) => {
+    const nowC = cur.effective * kwh / 100;
+    const winC = bw ? bw.avg * kwh / 100 : null;
+    return `<div class="cost"><span>${name}</span><span class="k">${de(kwh, 1)} kWh</span>` +
+      `<span class="now" style="color:${priceColor(cur.effective)}">${de(nowC)} €</span>` +
+      `<span class="win">${winC !== null ? de(winC) + " €" : "–"}</span></div>`;
+  }).join("");
+  $("costnote").textContent = bw
+    ? "links: zum Preis jetzt · rechts (grün): im besten Fenster " + hm(bw.start) + "–" + hm(bw.end)
+    : "zum aktuellen Preis";
+}
+
+/* ==================== Historie ==================== */
+function histStats() {
+  if (HIST && HIST.length) return HIST;
+  if (!HISTRAW) return [];
+  const out = [];
+  for (const dateStr of Object.keys(HISTRAW).sort()) {
+    const d = HISTRAW[dateStr];
+    const effs = d.epex.map(eff);
+    const n = effs.length;
+    if (!n) continue;
+    const win = Math.max(1, Math.round(CFG.best_window_hours * 60 / (d.res || 15)));
+    let best = Infinity, sum = 0;
+    for (let i = 0; i < n; i++) {
+      sum += effs[i];
+      if (i >= win) sum -= effs[i - win];
+      if (i >= win - 1) best = Math.min(best, sum / win);
+    }
+    const avg = effs.reduce((a, b) => a + b, 0) / n;
+    out.push({date: dateStr, avg, mn: Math.min(...effs), mx: Math.max(...effs),
+              wavg: best === Infinity ? avg : best});
+  }
+  return out;
+}
+function renderHist() {
+  const card = $("histCard");
+  const stats = histStats();
+  if (!stats || stats.length < 3) { card.classList.add("hidden"); return; }
+  card.classList.remove("hidden");
+  const days = stats.slice(-30);
+  const [ctx, w, h] = setupCanvas($("hist"), 130);
+  ctx.clearRect(0, 0, w, h);
+  const left = 26, top = 6, bottom = 16;
+  const cw = w - left - 6, ch = h - top - bottom;
+  let mn = Math.min(...days.map(d => d.mn)), mx = Math.max(...days.map(d => d.mx));
+  const pad = (mx - mn) * .1; mn -= pad; mx += pad;
+  const X = i => left + cw * (i + .5) / days.length;
+  const Y = v => top + ch * (1 - (v - mn) / (mx - mn));
+  ctx.font = "9px sans-serif";
+  for (let gi = 0; gi < 4; gi++) {
+    const v = mn + (mx - mn) * gi / 3;
+    ctx.strokeStyle = mixc(COL.surface, COL.line, .85);
+    ctx.beginPath(); ctx.moveTo(left, Y(v)); ctx.lineTo(left + cw, Y(v)); ctx.stroke();
+    ctx.fillStyle = COL.faint; ctx.textAlign = "right";
+    ctx.fillText(v.toFixed(0), left - 4, Y(v) + 3);
+  }
+  ctx.beginPath();
+  days.forEach((d, i) => ctx.lineTo(X(i), Y(d.mx)));
+  for (let i = days.length - 1; i >= 0; i--) ctx.lineTo(X(i), Y(days[i].mn));
+  ctx.closePath(); ctx.fillStyle = "rgba(76,141,255,.10)"; ctx.fill();
+  ctx.strokeStyle = COL.green; ctx.lineWidth = 1.5;
+  ctx.beginPath(); days.forEach((d, i) => ctx.lineTo(X(i), Y(d.wavg))); ctx.stroke();
+  ctx.strokeStyle = COL.blue; ctx.lineWidth = 2;
+  ctx.beginPath(); days.forEach((d, i) => ctx.lineTo(X(i), Y(d.avg))); ctx.stroke();
+  ctx.fillStyle = COL.faint; ctx.textAlign = "center";
+  const st = Math.max(1, Math.round(days.length / 5));
+  for (let i = 0; i < days.length; i += st) {
+    const dd = new Date(days[i].date);
+    ctx.fillText(dd.getDate() + "." + (dd.getMonth() + 1) + ".", X(i), h - 4);
+  }
+  const avgAll = days.reduce((a, d) => a + d.avg, 0) / days.length;
+  const wavgAll = days.reduce((a, d) => a + d.wavg, 0) / days.length;
+  const save = Math.max(0, (avgAll - wavgAll) * CFG.charge_kwh / 100 * 30);
+  $("histsum").innerHTML =
+    `Ø ${days.length} Tage: <b>${de(avgAll)}</b> ct · bestes ${CFG.best_window_hours}-h-Fenster: ` +
+    `Ø <b>${de(wavgAll)}</b> ct/kWh<br><span class="sp">Sparpotenzial ≈ ${de(save, 0)} € im Monat ` +
+    `bei täglich ${de(CFG.charge_kwh, 0)} kWh</span>`;
+}
+
+/* ==================== Gesamt-Render + Zyklus ==================== */
+function renderAll() {
+  renderHero(); renderWindow(); renderChart(null); updateTipbar(null);
+  renderRaster(); renderSlots(); renderParts(); renderCosts(); renderHist();
+}
+const pn = (v, lo, hi, fb) => {
+  const x = parseFloat(String(v).replace(",", "."));
+  return isNaN(x) ? fb : Math.max(lo, Math.min(hi, x));
+};
+function openTarif() {
+  $("t_auf").value = de(CFG.aufschlag_ct);
+  $("t_netz").value = de(CFG.netzentgelt_ct);
+  $("t_mwst").value = de((CFG.mwst - 1) * 100, 0);
+  $("t_bil").value = de(CFG.price_cheap, 0);
+  $("t_teu").value = de(CFG.price_expensive, 0);
+  $("t_std").value = CFG.best_window_hours;
+  $("t_kwh").value = de(CFG.charge_kwh, 0);
+  $("t_notirow").classList.toggle("hidden", !window.AndroidBridge);
+  $("t_noti").checked = CFG.notify_window !== false;
+  $("tarifdlg").classList.remove("hidden");
+}
+$("tarifbtn").addEventListener("click", openTarif);
+$("t_cancel").addEventListener("click", () => $("tarifdlg").classList.add("hidden"));
+$("tarifdlg").addEventListener("click", e => {
+  if (e.target === $("tarifdlg")) $("tarifdlg").classList.add("hidden");
+});
+$("t_save").addEventListener("click", () => {
+  const t = {
+    aufschlag_ct: pn($("t_auf").value, -10, 50, DEFAULTS.aufschlag_ct),
+    netzentgelt_ct: pn($("t_netz").value, 0, 50, DEFAULTS.netzentgelt_ct),
+    mwst: 1 + pn($("t_mwst").value, 0, 40, 20) / 100,
+    price_cheap: pn($("t_bil").value, 0, 199, DEFAULTS.price_cheap),
+    price_expensive: pn($("t_teu").value, 1, 200, DEFAULTS.price_expensive),
+    best_window_hours: Math.round(pn($("t_std").value, 1, 9, 3)),
+    charge_kwh: pn($("t_kwh").value, 0.1, 1000, DEFAULTS.charge_kwh),
+  };
+  if (t.price_expensive <= t.price_cheap) t.price_expensive = t.price_cheap + 1;
+  t.notify_window = $("t_noti").checked;
+  localStorage.gmTarif = JSON.stringify(t);
+  rebuildCfg();
+  process();
+  $("tarifdlg").classList.add("hidden");
+});
+$("reload").addEventListener("click", loadData);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) loadData();
+});
+window.addEventListener("resize", () => { if (S) renderAll(); });
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+setInterval(tickCountdown, 1000);
+setInterval(loadData, 10 * 60 * 1000);
+loadData();
+</script>
+</body>
+</html>

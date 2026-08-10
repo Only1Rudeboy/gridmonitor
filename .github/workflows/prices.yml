@@ -1,0 +1,29 @@
+name: Strompreise aktualisieren
+on:
+  schedule:
+    - cron: "17 */2 * * *"        # alle 2 Stunden
+    - cron: "*/20 10-13 * * *"    # Day-Ahead-Veröffentlichung (UTC) engmaschiger
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: prices
+  cancel-in-progress: false
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - run: python scripts/fetch_prices.py
+        env:
+          ENTSOE_TOKEN: ${{ secrets.ENTSOE_TOKEN }}
+      - name: Änderungen veröffentlichen
+        run: |
+          git config user.name "prices-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/
+          git diff --cached --quiet || (git commit -m "Preise aktualisiert" && git push)

@@ -1,0 +1,139 @@
+{
+ "stand": "2026-08-10",
+ "hinweis": "Alle Angaben ohne Gewähr — bitte mit der eigenen Stromrechnung abgleichen.",
+ "netz_hinweis": "Netz-Arbeitspreis + Netzverlustentgelt, Netzebene 7 (Haushalt, nicht gemessene Leistung), brutto inkl. 20 % USt. Gültig ab 1.1.2026 laut SNE-V Novelle 2026.",
+ "quellen": [
+  {
+   "name": "SNE-V Novelle 2026 — BGBl. II Nr. 305/2025 (amtlich)",
+   "url": "https://www.ris.bka.gv.at/eli/bgbl/II/2025/305"
+  },
+  {
+   "name": "aWATTAR Tarif HOURLY (Anbieterseite)",
+   "url": "https://www.awattar.at/tariffs/hourly"
+  },
+  {
+   "name": "Smart Meter Portal — Anbietervergleich dynamische Tarife (06/2026)",
+   "url": "https://www.smartmeter-portal.at/dynamischer-stromtarif/anbieter-vergleich/"
+  },
+  {
+   "name": "Selectra — Verbund Tarife 2026",
+   "url": "https://selectra.at/strom/anbieter/verbund/tarife"
+  }
+ ],
+ "anbieter": [
+  {
+   "id": "vkw",
+   "name": "VKW Strom Dynamisch",
+   "aufschlag_ct": 1.2,
+   "info": "15-Minuten-Abrechnung · Vorarlberg"
+  },
+  {
+   "id": "awattar",
+   "name": "aWATTAR HOURLY",
+   "aufschlag_ct": 1.5,
+   "info": "stündlich · österreichweit · + 5,75 € Grundgebühr/Monat"
+  },
+  {
+   "id": "smartenergy",
+   "name": "smartENERGY smartCONTROL",
+   "aufschlag_ct": 1.44,
+   "info": "stündlich · österreichweit"
+  },
+  {
+   "id": "verbund",
+   "name": "Verbund HOURLY",
+   "aufschlag_ct": 1.4,
+   "info": "stündlich · ca.-Wert, exakter Aufschlag steht erst im Angebot"
+  },
+  {
+   "id": "oekostrom",
+   "name": "oekostrom oeko Spot+",
+   "aufschlag_ct": null,
+   "info": "Aufschlag bitte laut eigenem Vertrag eintragen"
+  },
+  {
+   "id": "salzburgag",
+   "name": "Salzburg AG FlexSpot",
+   "aufschlag_ct": null,
+   "info": "Aufschlag bitte laut eigenem Vertrag eintragen"
+  },
+  {
+   "id": "energieag",
+   "name": "Energie AG (dynamisch)",
+   "aufschlag_ct": null,
+   "info": "Aufschlag bitte laut eigenem Vertrag eintragen"
+  }
+ ],
+ "netz": [
+  {
+   "id": "burgenland",
+   "name": "Burgenland",
+   "netz_ct": 10.15
+  },
+  {
+   "id": "kaernten",
+   "name": "Kärnten",
+   "netz_ct": 12.05
+  },
+  {
+   "id": "klagenfurt",
+   "name": "Klagenfurt",
+   "netz_ct": 8.97
+  },
+  {
+   "id": "niederoesterreich",
+   "name": "Niederösterreich",
+   "netz_ct": 11.01
+  },
+  {
+   "id": "oberoesterreich",
+   "name": "Oberösterreich",
+   "netz_ct": 8.18
+  },
+  {
+   "id": "linz",
+   "name": "Linz",
+   "netz_ct": 7.27
+  },
+  {
+   "id": "salzburg",
+   "name": "Salzburg",
+   "netz_ct": 8.34
+  },
+  {
+   "id": "steiermark",
+   "name": "Steiermark",
+   "netz_ct": 10.99
+  },
+  {
+   "id": "graz",
+   "name": "Graz",
+   "netz_ct": 6.99
+  },
+  {
+   "id": "tirol",
+   "name": "Tirol",
+   "netz_ct": 8.52
+  },
+  {
+   "id": "innsbruck",
+   "name": "Innsbruck",
+   "netz_ct": 10.18
+  },
+  {
+   "id": "vorarlberg",
+   "name": "Vorarlberg",
+   "netz_ct": 6.42
+  },
+  {
+   "id": "wien",
+   "name": "Wien",
+   "netz_ct": 9.22
+  },
+  {
+   "id": "kleinwalsertal",
+   "name": "Kleinwalsertal",
+   "netz_ct": 21.76
+  }
+ ]
+}

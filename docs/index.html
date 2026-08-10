@@ -149,6 +149,11 @@
   .cost .win{width:86px;text-align:right;color:var(--green)}
   #costnote{font-size:9px;color:var(--faint);margin-top:8px}
   .dlg input[type=checkbox]{width:auto;accent-color:var(--blue)}
+  .dlg select{width:170px;background:var(--surface2);border:1px solid var(--line);
+    color:var(--text);border-radius:8px;padding:7px 6px;font-size:12px}
+  #t_pinfo{font-size:9px;color:var(--cyan);margin:-2px 0 8px;line-height:1.4}
+  #disclaim{text-align:center;font-size:9px;color:var(--faint);padding:0 10px 4px}
+  #disclaim a{color:var(--dim)}
 </style>
 </head>
 <body>
@@ -225,12 +230,16 @@
     <span><b>Aktualisieren</b><small id="updated">–</small></span></button>
 </footer>
 <div id="attrib"></div>
+<div id="disclaim"></div>
 <div id="sponsor">Unterstützt von OSMOVOLTAIK e.U.</div>
 <div id="tarifdlg" class="hidden">
   <div class="dlg">
     <h3>⚙ Mein Tarif</h3>
-    <label>Aufschlag (ct/kWh)<input id="t_auf" inputmode="decimal"></label>
-    <label>Netzentgelt (ct/kWh)<input id="t_netz" inputmode="decimal"></label>
+    <label>Anbieter<select id="t_anb"></select></label>
+    <label>Netzgebiet<select id="t_reg"></select></label>
+    <div id="t_pinfo" class="hidden"></div>
+    <label>Aufschlag (ct/kWh, netto)<input id="t_auf" inputmode="decimal"></label>
+    <label>Netzentgelt (ct/kWh, brutto)<input id="t_netz" inputmode="decimal"></label>
     <label>MwSt (%)<input id="t_mwst" inputmode="decimal"></label>
     <label>Schwelle günstig (ct)<input id="t_bil" inputmode="decimal"></label>
     <label>Schwelle teuer (ct)<input id="t_teu" inputmode="decimal"></label>
@@ -307,6 +316,19 @@ function rating(v) {
 }
 
 /* ==================== Daten laden: PC-Widget → aWATTAR → Cache ==================== */
+let PRESETS = null;      // Tarif-Vorlagen vom Verteiler
+async function loadPresets() {
+  if (PRESETS) return;
+  try { PRESETS = JSON.parse(localStorage.gmPresets || "null"); } catch (e) {}
+  try {
+    const base = location.host.endsWith("github.io") ? "." : HUB;
+    const r = await fetch(base + "/presets.json", {cache: "no-store"});
+    if (r.ok) {
+      PRESETS = await r.json();
+      localStorage.gmPresets = JSON.stringify(PRESETS);
+    }
+  } catch (e) {}
+}
 let S = null;            // aktueller Auswertungs-Stand
 let HIST = [];           // Tagesstatistiken vom PC-Widget (brutto, fertig)
 let HISTRAW = null;      // Roh-Historie vom Verteiler (Börsenpreise je Tag)
@@ -398,6 +420,17 @@ async function loadData() {
   LASTRAW = payload.prices;
   process();
   if (payload.attribution) $("attrib").textContent = payload.attribution;
+  loadPresets().then(() => {
+    const gen = payload.generated ? new Date(payload.generated) : new Date();
+    const d = t => t.toLocaleDateString("de-AT", {day: "2-digit", month: "2-digit",
+                                                  year: "numeric"});
+    let line = "Alle Angaben ohne Gewähr · Preisdaten vom " + d(gen);
+    if (PRESETS && PRESETS.stand)
+      line += " · Tarif-Presets: Stand " + d(new Date(PRESETS.stand));
+    $("disclaim").innerHTML = line +
+      ' · <a href="https://github.com/Only1Rudeboy/gridmonitor#-quellen" target="_blank">Quellen</a>';
+    updateTarifBtn();
+  });
   const res = S.pts.length && S.pts[0].res <= 15 ? "15 min" : "stündlich";
   setStatus(sourceMode === "Cache" ? COL.amber : COL.green,
     sourceName + " · " + res);
@@ -877,7 +910,44 @@ const pn = (v, lo, hi, fb) => {
   const x = parseFloat(String(v).replace(",", "."));
   return isNaN(x) ? fb : Math.max(lo, Math.min(hi, x));
 };
+function fillSelect(sel, items, chosen) {
+  sel.innerHTML = '<option value="">— selbst eintragen —</option>' +
+    items.map(i => `<option value="${i.id}"${i.id === chosen ? " selected" : ""}>` +
+                   `${i.name}</option>`).join("");
+}
+function presetInfo() {
+  const box = $("t_pinfo");
+  const parts = [];
+  if (PRESETS) {
+    const a = PRESETS.anbieter.find(x => x.id === $("t_anb").value);
+    if (a && a.info) parts.push(a.name + ": " + a.info);
+    if ($("t_reg").value) parts.push(PRESETS.netz_hinweis);
+    if (parts.length) parts.push(PRESETS.hinweis);
+  }
+  box.textContent = parts.join(" — ");
+  box.classList.toggle("hidden", !parts.length);
+}
+function updateTarifBtn() {
+  let t = {};
+  try { t = JSON.parse(localStorage.gmTarif || "{}"); } catch (e) {}
+  const el = document.querySelector("#tarifbtn small");
+  if (PRESETS && (t.p_anb || t.p_reg)) {
+    const a = PRESETS.anbieter.find(x => x.id === t.p_anb);
+    const n = PRESETS.netz.find(x => x.id === t.p_reg);
+    el.textContent = [(a ? a.name : "eigener Tarif"),
+                      (n ? "Netz " + n.name : null)].filter(Boolean).join(" · ");
+  } else {
+    el.textContent = "Aufschlag · Netzentgelt · MwSt";
+  }
+}
 function openTarif() {
+  let saved = {};
+  try { saved = JSON.parse(localStorage.gmTarif || "{}"); } catch (e) {}
+  if (PRESETS) {
+    fillSelect($("t_anb"), PRESETS.anbieter, saved.p_anb || "");
+    fillSelect($("t_reg"), PRESETS.netz, saved.p_reg || "");
+  }
+  presetInfo();
   $("t_auf").value = de(CFG.aufschlag_ct);
   $("t_netz").value = de(CFG.netzentgelt_ct);
   $("t_mwst").value = de((CFG.mwst - 1) * 100, 0);
@@ -889,6 +959,16 @@ function openTarif() {
   $("t_noti").checked = CFG.notify_window !== false;
   $("tarifdlg").classList.remove("hidden");
 }
+$("t_anb").addEventListener("change", () => {
+  const a = PRESETS && PRESETS.anbieter.find(x => x.id === $("t_anb").value);
+  if (a && a.aufschlag_ct != null) $("t_auf").value = de(a.aufschlag_ct);
+  presetInfo();
+});
+$("t_reg").addEventListener("change", () => {
+  const n = PRESETS && PRESETS.netz.find(x => x.id === $("t_reg").value);
+  if (n) $("t_netz").value = de(n.netz_ct);
+  presetInfo();
+});
 $("tarifbtn").addEventListener("click", openTarif);
 $("t_cancel").addEventListener("click", () => $("tarifdlg").classList.add("hidden"));
 $("tarifdlg").addEventListener("click", e => {
@@ -906,11 +986,15 @@ $("t_save").addEventListener("click", () => {
   };
   if (t.price_expensive <= t.price_cheap) t.price_expensive = t.price_cheap + 1;
   t.notify_window = $("t_noti").checked;
+  t.p_anb = $("t_anb") ? $("t_anb").value : "";
+  t.p_reg = $("t_reg") ? $("t_reg").value : "";
   localStorage.gmTarif = JSON.stringify(t);
   rebuildCfg();
   process();
+  updateTarifBtn();
   $("tarifdlg").classList.add("hidden");
 });
+if (location.hash === "#tarif") setTimeout(() => { loadPresets().then(openTarif); }, 600);
 $("reload").addEventListener("click", loadData);
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) loadData();

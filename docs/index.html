@@ -688,6 +688,8 @@ function renderWindow() {
     const mins = (bw.start - new Date()) / 60000;
     let meta = mins <= 0 ? "läuft jetzt" : mins < 90 ? "in " + Math.trunc(mins) + " min"
       : "in " + de(mins / 60, 1) + " h";
+    if (tag === "HEUTE" && mins <= 15)
+      meta += " · später wird es heute nicht mehr günstiger";
     const pool = tag === "HEUTE" ? S.today : S.tomorrow;
     const dayAvg = pool.reduce((a, p) => a + p.effective, 0) / pool.length;
     const saved = (dayAvg - bw.avg) * CFG.charge_kwh / 100;

@@ -576,8 +576,9 @@ function analyse(prices) {
     for (const h in acc) target[h] = acc[h].reduce((a, b) => a + b, 0) / acc[h].length;
   }
   s.window = bestWindow(s.future, CFG.best_window_hours);
-  s.windowToday = bestWindow(s.future.filter(p => p.start.toDateString() === day),
-                             CFG.best_window_hours);
+  s.windowToday = bestWindow(s.today, CFG.best_window_hours);
+  s.windowTodayRest = bestWindow(s.future.filter(p => p.start.toDateString() === day),
+                                 CFG.best_window_hours);
   s.windowTomorrow = bestWindow(s.tomorrow, CFG.best_window_hours);
   s.nextCheap = s.future.find(p => p.start > now && p.effective <= CFG.price_cheap) || null;
   S = s;
@@ -673,7 +674,9 @@ function tickCountdown() {
 function renderWindow() {
   $("fhours").textContent = CFG.best_window_hours + " h";
   const wt = S.windowToday, wm = S.windowTomorrow;
-  const bothBest = wt && wm ? (wt.avg <= wm.avg ? "HEUTE" : "MORGEN") : null;
+  const todayUsable = wt && wt.end > new Date();
+  const bothBest = todayUsable && wm ? (wt.avg <= wm.avg ? "HEUTE" : "MORGEN")
+    : wm ? "MORGEN" : todayUsable ? "HEUTE" : null;
   const rows = [["HEUTE", wt], ["MORGEN", wm]];
   $("fwins").innerHTML = rows.map(([tag, bw]) => {
     if (!bw) {
@@ -686,15 +689,23 @@ function renderWindow() {
              `<div class="fmid"><div class="fh">${hint}</div></div></div>`;
     }
     const mins = (bw.start - new Date()) / 60000;
-    let meta = mins <= 0 ? "läuft jetzt" : mins < 90 ? "in " + Math.trunc(mins) + " min"
-      : "in " + de(mins / 60, 1) + " h";
-    if (tag === "HEUTE" && mins <= 15)
-      meta += " · später wird es heute nicht mehr günstiger";
+    const vorbei = bw.end <= new Date();
+    let meta;
+    if (vorbei) {
+      meta = "bereits vorbei";
+      const rest = S.windowTodayRest;
+      if (rest) meta += " · Rest heute: " + hm(rest.start) + "–" + hm(rest.end)
+                        + " (Ø " + de(rest.avg) + ")";
+    } else {
+      meta = mins <= 0 ? "läuft jetzt" : mins < 90 ? "in " + Math.trunc(mins) + " min"
+        : "in " + de(mins / 60, 1) + " h";
+    }
     const pool = tag === "HEUTE" ? S.today : S.tomorrow;
     const dayAvg = pool.reduce((a, p) => a + p.effective, 0) / pool.length;
     const saved = (dayAvg - bw.avg) * CFG.charge_kwh / 100;
-    if (saved > .005) meta += " · spart ca. " + de(saved) + " €";
-    const cls = (!bothBest || bothBest === tag) ? "best" : "alt";
+    if (!vorbei && saved > .005) meta += " · spart ca. " + de(saved) + " €";
+    const cls = (tag === "HEUTE" && vorbei) ? "alt"
+      : (!bothBest || bothBest === tag) ? "best" : "alt";
     return `<div class="fwin"><span class="fday">${tag}</span>` +
       `<div class="fmid"><div class="ft">${hm(bw.start)} – ${hm(bw.end)}</div>` +
       `<div class="fm">${meta}</div></div>` +

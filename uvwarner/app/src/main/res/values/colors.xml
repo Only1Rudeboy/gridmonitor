@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="uv_low">#3EA72D</color>
+    <color name="uv_moderate">#E8B900</color>
+    <color name="uv_high">#F18B00</color>
+    <color name="uv_very_high">#E53210</color>
+    <color name="uv_extreme">#8A4FCF</color>
+
+    <color name="brand">#F18B00</color>
+    <color name="icon_background">#FFF3E0</color>
+</resources>

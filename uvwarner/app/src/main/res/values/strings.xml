@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">UV-Warner</string>
+
+    <!-- Benachrichtigungskanal -->
+    <string name="channel_name">UV-Warnungen</string>
+    <string name="channel_description">Meldet, sobald der UV-Index deine Schwelle erreicht</string>
+
+    <!-- Kategorien -->
+    <string name="uv_low">niedrig</string>
+    <string name="uv_moderate">mäßig</string>
+    <string name="uv_high">hoch</string>
+    <string name="uv_very_high">sehr hoch</string>
+    <string name="uv_extreme">extrem</string>
+
+    <string name="advice_low">Kein besonderer Schutz nötig.</string>
+    <string name="advice_moderate">Mittags Schatten suchen, Sonnencreme und Kopfbedeckung empfohlen.</string>
+    <string name="advice_high">Sonnencreme LSF 30+, Hut und Sonnenbrille; Mittagssonne meiden.</string>
+    <string name="advice_very_high">Schutz unbedingt nötig: LSF 50+, Kleidung, Schatten; Mittagssonne meiden.</string>
+    <string name="advice_extreme">Aufenthalt im Freien möglichst vermeiden, voller Schutz nötig.</string>
+
+    <!-- Benachrichtigungen -->
+    <string name="notif_now_title">UV-Index %1$s erreicht</string>
+    <string name="notif_now_text">%1$s: aktuell UV %2$s (%3$s).%4$s %5$s</string>
+    <string name="notif_until">" Über UV %1$d noch bis etwa %2$s Uhr."</string>
+    <string name="notif_soon_title">UV %1$d ab %2$s Uhr</string>
+    <string name="notif_soon_text">%1$s: ab etwa %2$s Uhr wird UV %3$d erreicht.%4$s Denk an den Sonnenschutz.</string>
+    <string name="notif_peak">" Höchstwert heute %1$s um %2$s Uhr."</string>
+
+    <!-- Oberfläche -->
+    <string name="your_location">Dein Standort</string>
+    <string name="title_current">UV-Index jetzt</string>
+    <string name="value_unknown">–</string>
+    <string name="updated_never">Noch nicht geprüft</string>
+    <string name="updated_at">Aktualisiert um %1$s Uhr</string>
+    <string name="updated_cached">Letzter Wert von %1$s Uhr</string>
+    <string name="loading">Standort und UV-Index werden geholt …</string>
+    <string name="refresh">Standort &amp; UV aktualisieren</string>
+
+    <string name="settings_title">Einstellungen</string>
+    <string name="threshold_label">Warnen ab UV-Index</string>
+    <string name="threshold_minus">Schwelle verringern</string>
+    <string name="threshold_plus">Schwelle erhöhen</string>
+    <string name="warnings_enabled">Warnungen aktiv</string>
+    <string name="warnings_summary">Prüft im Hintergrund und meldet sich, sobald die Schwelle erreicht wird — plus Vorwarnung bis zu drei Stunden davor.</string>
+    <string name="interval_label">Prüfintervall</string>
+
+    <string name="permission_needed">Für die UV-Warnung wird dein Standort gebraucht.</string>
+    <string name="grant_permission">Standort erlauben</string>
+    <string name="location_off">Die Standortdienste sind ausgeschaltet — bitte in den Systemeinstellungen aktivieren.</string>
+    <string name="no_location">Kein Standort verfügbar. Kurz ins Freie gehen oder GPS einschalten und erneut versuchen.</string>
+    <string name="error_generic">Abruf fehlgeschlagen: %1$s</string>
+    <string name="notifications_needed">Ohne Benachrichtigungs-Berechtigung kann nicht gewarnt werden.</string>
+
+    <string name="today_headline">Heute</string>
+    <string name="today_summary">UV %1$d wird von %2$s bis %3$s Uhr erreicht. Höchstwert %4$s um %5$s Uhr.</string>
+    <string name="today_below">Der UV-Index bleibt heute unter %1$d. Höchstwert %2$s.</string>
+    <string name="hours_headline">Nächste Stunden</string>
+
+    <string name="background_title">Standort im Hintergrund</string>
+    <string name="background_message">Für Warnungen verwendet die App sonst die zuletzt in der App ermittelte Position. Wenn du oft unterwegs bist, stelle den Standortzugriff in den Einstellungen auf &#8222;Immer zulassen&#8220;.</string>
+    <string name="background_open">Einstellungen öffnen</string>
+    <string name="background_later">Später</string>
+
+    <string name="battery_hint">Damit Warnungen pünktlich kommen, sollte die App von der Akku-Optimierung ausgenommen sein.</string>
+    <string name="battery_button">Akku-Optimierung öffnen</string>
+
+    <string name="source_note">Datenquelle: Open-Meteo (CAMS/ECMWF). Alle Angaben ohne Gewähr — sie ersetzen keine amtliche UV-Warnung.</string>
+
+    <string-array name="interval_labels">
+        <item>alle 15 Minuten</item>
+        <item>alle 30 Minuten</item>
+        <item>jede Stunde</item>
+        <item>alle 3 Stunden</item>
+    </string-array>
+</resources>

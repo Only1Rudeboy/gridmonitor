@@ -1,0 +1,88 @@
+# ☀️ UV-Warner — Android-App
+
+Warnt, sobald der UV-Index am eigenen Standort einen einstellbaren Wert
+erreicht (Standard: **4**). Kein Konto, kein API-Schlüssel, kein eigener Server.
+
+## Funktionen
+
+- **Aktueller UV-Index** für den per GPS/Netz ermittelten Standort, mit
+  WHO-Kategorie (niedrig · mäßig · hoch · sehr hoch · extrem) und Schutzhinweis
+- **Warnung ab Schwellwert** — Standard 4, einstellbar von 1 bis 11
+- **Vorwarnung** bis zu drei Stunden bevor die Schwelle erreicht wird
+- **Tagesübersicht:** von wann bis wann die Schwelle überschritten wird,
+  Höchstwert und Uhrzeit
+- **Balkenverlauf** der nächsten 12 Stunden
+- **Hintergrundprüfung** über WorkManager, Intervall wählbar
+  (15 / 30 / 60 / 180 Minuten), übersteht Neustarts
+- Keine Google-Play-Dienste nötig (reiner `LocationManager`)
+
+Gewarnt wird jeweils **einmal pro Überschreitung** — erst wenn der Wert wieder
+unter die Schwelle fällt, ist die nächste Warnung möglich. Die Vorwarnung kommt
+höchstens einmal pro Tag.
+
+## Datenquelle
+
+[Open-Meteo](https://open-meteo.com) (`uv_index`, Basis CAMS/ECMWF) — frei
+nutzbar ohne Schlüssel. Es werden ausschließlich Breiten- und Längengrad an
+Open-Meteo übertragen; die Position bleibt sonst auf dem Gerät.
+
+## Berechtigungen
+
+| Berechtigung | Wofür |
+|---|---|
+| Standort (grob/genau) | UV-Index für die aktuelle Position |
+| Standort im Hintergrund | *optional* — sonst nutzt die Hintergrundprüfung die zuletzt in der App ermittelte Position |
+| Benachrichtigungen | für die Warnung selbst (Android 13+) |
+| Internet | Abruf der UV-Daten |
+| Neustart empfangen | Prüfung nach Reboot wieder aktivieren |
+
+## Bauen
+
+```bash
+cd uvwarner
+./gradlew assembleRelease
+# → app/build/outputs/apk/release/app-release.apk
+```
+
+Voraussetzungen: JDK 17, Android SDK (compileSdk 35). minSdk 26 (Android 8).
+
+Ohne hinterlegten Signaturschlüssel wird mit dem Debug-Schlüssel signiert —
+installierbar, aber bei jedem Rechner/Build eine andere Signatur.
+
+## APK aus GitHub Actions
+
+Der Workflow [`uvwarner.yml`](../.github/workflows/uvwarner.yml) baut die APK bei
+jedem Push auf `uvwarner/**` und legt sie als Artefakt **UV-Warner-APK** ab.
+Ein Tag `uv-v1.0` erzeugt zusätzlich ein GitHub-Release mit `UV-Warner.apk`.
+
+### Eigener Signaturschlüssel (empfohlen für Updates)
+
+Damit die App über bestehende Installationen aktualisiert werden kann, muss die
+Signatur gleich bleiben. Dafür einmalig einen Schlüssel erzeugen …
+
+```bash
+keytool -genkeypair -v -keystore uvwarner.jks -alias uvwarner \
+  -keyalg RSA -keysize 2048 -validity 10000
+base64 -w0 uvwarner.jks   # Ausgabe kopieren
+```
+
+… und als Repository-Secrets hinterlegen:
+
+| Secret | Inhalt |
+|---|---|
+| `UV_KEYSTORE_BASE64` | Base64 der `.jks`-Datei |
+| `UV_KEYSTORE_PASSWORD` | Keystore-Passwort |
+| `UV_KEY_ALIAS` | `uvwarner` |
+| `UV_KEY_PASSWORD` | Schlüssel-Passwort |
+
+Sind die Secrets gesetzt, signiert der Build automatisch damit.
+
+## Zuverlässigkeit der Warnungen
+
+Android verzögert Hintergrundarbeit im Energiesparmodus. Für pünktliche
+Warnungen sollte die App in den Systemeinstellungen von der Akku-Optimierung
+ausgenommen werden — der Knopf dafür ist unten in der App.
+
+---
+
+*Angaben ohne Gewähr — die App ersetzt keine amtliche UV-Warnung.*

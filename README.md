@@ -46,6 +46,13 @@ eigenen Stromrechnung abgleichen. Zentral gepflegt in
 - **Preisdaten:** [ENTSO-E Transparency](https://transparency.entsoe.eu) · [SMARD/Energy-Charts](https://www.energy-charts.info) (CC BY 4.0)
 - **VKW Strom Dynamisch:** Aufschlag laut Anbieter (1,20 ct/kWh netto)
 
+## ☀️ Auch in diesem Repo: UV-Warner
+
+[`uvwarner/`](uvwarner/) enthält eine eigenständige Android-App, die warnt,
+sobald der UV-Index am aktuellen Standort einen einstellbaren Wert erreicht
+(Standard 4) — inklusive Vorwarnung, Tagesübersicht und Hintergrundprüfung.
+Details in [`uvwarner/README.md`](uvwarner/README.md).
+
 ## 🔧 Technik
 
 Ein GitHub-Actions-Job holt die Day-Ahead-Preise mehrmals täglich

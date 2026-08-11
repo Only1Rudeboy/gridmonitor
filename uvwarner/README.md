@@ -3,6 +3,9 @@
 Warnt, sobald der UV-Index am eigenen Standort einen einstellbaren Wert
 erreicht (Standard: **4**). Kein Konto, kein API-Schlüssel, kein eigener Server.
 
+**[📲 UV-Warner.apk herunterladen](https://github.com/Only1Rudeboy/gridmonitor/releases/download/uv-v1.2/UV-Warner.apk)**
+— Installation aus unbekannter Quelle bestätigen. Ab Android 8.
+
 ## Oberfläche
 
 Zwei Bildschirme: vorne nur der Zustand, alles Einstellbare dahinter.

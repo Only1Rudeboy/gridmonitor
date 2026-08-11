@@ -3,6 +3,18 @@
 Warnt, sobald der UV-Index am eigenen Standort einen einstellbaren Wert
 erreicht (Standard: **4**). Kein Konto, kein API-Schlüssel, kein eigener Server.
 
+## Oberfläche
+
+Zwei Bildschirme: vorne nur der Zustand, alles Einstellbare dahinter.
+
+- **Start** — Ort, großer Ring mit dem aktuellen Wert und der WHO-Kategorie,
+  eine Zeile Empfehlung, Tages- und Morgen-Zusammenfassung, Balkenverlauf der
+  nächsten 12 Stunden. Zum Aktualisieren nach unten ziehen.
+- **Einstellungen** — Warnungen an/aus, Schwelle per Schieberegler, Prüf­intervall,
+  Akku- und Hintergrund-Standort-Hinweise.
+
+Material 3, hell und dunkel; ab Android 12 übernimmt die App die Systemfarben.
+
 ## Funktionen
 
 - **Aktueller UV-Index** für den per GPS/Netz ermittelten Standort, mit

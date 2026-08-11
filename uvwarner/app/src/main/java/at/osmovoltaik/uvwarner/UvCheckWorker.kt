@@ -84,59 +84,49 @@ class UvCheckWorker(appContext: Context, params: WorkerParameters) :
             prefs.wasAboveThreshold = verdict.wasAboveThreshold
             prefs.preWarnDate = verdict.preWarnDate
 
-            val place = prefs.placeName ?: context.getString(R.string.your_location)
+            val place = prefs.placeName ?: context.getString(R.string.place_unknown)
 
             when (val decision = verdict.decision) {
                 is UvDecision.Nothing -> Unit
 
                 is UvDecision.Now -> {
                     val category = UvCategory.of(decision.uv)
-                    val untilText = decision.until?.let {
+                    val advice = context.getString(category.adviceRes)
+                    val detail = decision.until?.let {
                         context.getString(
-                            R.string.notif_until,
-                            threshold,
-                            it.time.plusHours(1).format(TIME_FORMAT)
+                            R.string.notif_now_until,
+                            it.time.plusHours(1).format(TIME_FORMAT),
+                            advice
                         )
-                    } ?: ""
+                    } ?: advice
 
                     Notifier.showCurrentWarning(
                         context,
-                        context.getString(R.string.notif_now_title, format(decision.uv)),
                         context.getString(
-                            R.string.notif_now_text,
-                            place,
+                            R.string.notif_now_title,
                             format(decision.uv),
-                            context.getString(category.labelRes),
-                            untilText,
-                            context.getString(category.adviceRes)
-                        )
+                            context.getString(category.labelRes)
+                        ),
+                        context.getString(R.string.notif_now_text, place, detail)
                     )
                 }
 
                 is UvDecision.Soon -> {
-                    val peakText = decision.peak?.let {
-                        context.getString(
-                            R.string.notif_peak,
-                            format(it.uv),
-                            it.time.format(TIME_FORMAT)
-                        )
-                    } ?: ""
-
-                    Notifier.showForecastWarning(
-                        context,
-                        context.getString(
-                            R.string.notif_soon_title,
-                            threshold,
-                            decision.at.time.format(TIME_FORMAT)
-                        ),
+                    val title = context.getString(
+                        R.string.notif_soon_title,
+                        threshold,
+                        decision.at.time.format(TIME_FORMAT)
+                    )
+                    val text = decision.peak?.let {
                         context.getString(
                             R.string.notif_soon_text,
                             place,
-                            decision.at.time.format(TIME_FORMAT),
-                            threshold,
-                            peakText
+                            format(it.uv),
+                            it.time.format(TIME_FORMAT)
                         )
-                    )
+                    } ?: context.getString(R.string.notif_soon_text_plain, place)
+
+                    Notifier.showForecastWarning(context, title, text)
                 }
             }
         }

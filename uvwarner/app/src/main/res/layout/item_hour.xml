@@ -1,45 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
+    android:layout_width="52dp"
     android:layout_height="wrap_content"
-    android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:paddingTop="3dp"
-    android:paddingBottom="3dp">
-
-    <TextView
-        android:id="@+id/txtHour"
-        android:layout_width="56dp"
-        android:layout_height="wrap_content"
-        android:textAppearance="?attr/textAppearanceBodyMedium" />
-
-    <LinearLayout
-        android:id="@+id/boxBar"
-        android:layout_width="0dp"
-        android:layout_height="16dp"
-        android:layout_weight="1"
-        android:orientation="horizontal"
-        android:weightSum="12">
-
-        <View
-            android:id="@+id/viewBar"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="0"
-            android:background="@drawable/bg_bar" />
-
-        <View
-            android:id="@+id/viewBarRest"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="12" />
-    </LinearLayout>
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/txtHourValue"
-        android:layout_width="44dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="end"
-        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:textStyle="bold" />
+
+    <FrameLayout
+        android:id="@+id/boxBar"
+        android:layout_width="12dp"
+        android:layout_height="104dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/bg_bar_track">
+
+        <View
+            android:id="@+id/viewBar"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:layout_gravity="bottom"
+            android:background="@drawable/bg_bar" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/txtHour"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
 </LinearLayout>

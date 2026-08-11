@@ -3,14 +3,10 @@ package at.osmovoltaik.uvwarner
 import android.Manifest
 import android.content.Intent
 import android.graphics.Typeface
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
+import android.text.format.DateUtils
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.LinearLayout
+import android.widget.FrameLayout
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -18,15 +14,10 @@ import androidx.lifecycle.lifecycleScope
 import at.osmovoltaik.uvwarner.databinding.ActivityMainBinding
 import at.osmovoltaik.uvwarner.databinding.ItemHourBinding
 import com.google.android.material.color.MaterialColors
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
@@ -36,19 +27,22 @@ class MainActivity : AppCompatActivity() {
     private var snapshot: UvSnapshot? = null
     private var snapshotIsLive = false
     private var loading = false
-    private var spinnerInitialised = false
 
     private val timeFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     private val locationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
-            updatePermissionUi()
-            if (result.values.any { it }) refresh()
+            if (result.values.any { it }) {
+                hideNotice()
+                refresh()
+            } else {
+                showNotice(getString(R.string.need_location), withAction = true)
+            }
         }
 
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (!granted) showStatus(getString(R.string.notifications_needed))
+            if (!granted) showNotice(getString(R.string.need_notifications))
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,29 +51,27 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         prefs = Prefs(this)
-        Notifier.ensureChannel(this)
 
-        binding.txtThreshold.text = prefs.threshold.toString()
-        binding.swEnabled.isChecked = prefs.warningsEnabled
+        binding.toolbar.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.action_refresh -> {
+                    onRefreshRequested(); true
+                }
 
-        binding.btnThresholdMinus.setOnClickListener { changeThreshold(-1) }
-        binding.btnThresholdPlus.setOnClickListener { changeThreshold(+1) }
-        binding.btnRefresh.setOnClickListener { onRefreshClicked() }
-        binding.btnPermission.setOnClickListener { requestLocationPermission() }
-        binding.btnBattery.setOnClickListener { openBatterySettings() }
+                R.id.action_settings -> {
+                    startActivity(Intent(this, SettingsActivity::class.java)); true
+                }
 
-        binding.swEnabled.setOnCheckedChangeListener { _, checked ->
-            prefs.warningsEnabled = checked
-            if (checked) {
-                UvScheduler.schedule(this, prefs.intervalMinutes)
-                askNotificationPermissionIfNeeded()
-                maybeSuggestBackgroundLocation()
-            } else {
-                UvScheduler.cancel(this)
+                else -> false
             }
         }
 
-        setupIntervalSpinner()
+        binding.swipeRefresh.setOnRefreshListener { onRefreshRequested() }
+        binding.btnNotice.setOnClickListener { requestLocationPermission() }
+        binding.cardGuard.setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+        }
+
         renderCached()
 
         if (prefs.warningsEnabled) {
@@ -88,20 +80,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        updatePermissionUi()
-        // Beim Öffnen nur nachladen, wenn der gespeicherte Stand alt genug ist.
-        val stale = System.currentTimeMillis() - prefs.lastCheckAt > REFRESH_AFTER_MILLIS
-        if (LocationHelper.hasLocationPermission(this) && !loading && stale) {
-            refresh()
+    override fun onResume() {
+        super.onResume()
+        renderGuard()
+        // Die Schwelle kann in den Einstellungen geändert worden sein.
+        snapshot?.let { renderSnapshot(it, snapshotIsLive) }
+
+        if (!LocationHelper.hasLocationPermission(this)) {
+            showNotice(getString(R.string.need_location), withAction = true)
+            return
         }
+
+        val stale = System.currentTimeMillis() - prefs.lastCheckAt > REFRESH_AFTER_MILLIS
+        if (!loading && stale) refresh()
     }
 
-    // ---------------------------------------------------------------- Aktionen
+    // ---------------------------------------------------------------- Abruf
 
-    private fun onRefreshClicked() {
+    private fun onRefreshRequested() {
         if (!LocationHelper.hasLocationPermission(this)) {
+            binding.swipeRefresh.isRefreshing = false
             requestLocationPermission()
             return
         }
@@ -111,14 +109,13 @@ class MainActivity : AppCompatActivity() {
     private fun refresh() {
         if (loading) return
         loading = true
-        binding.btnRefresh.isEnabled = false
-        showStatus(getString(R.string.loading), error = false)
+        binding.swipeRefresh.isRefreshing = true
 
         lifecycleScope.launch {
             try {
                 val location = LocationHelper.currentLocation(this@MainActivity)
                 if (location == null) {
-                    showStatus(
+                    showNotice(
                         if (LocationHelper.isLocationEnabled(this@MainActivity)) {
                             getString(R.string.no_location)
                         } else {
@@ -129,10 +126,9 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 prefs.saveLocation(location.latitude, location.longitude)
-                // Auch ein leerer Name wird übernommen, sonst bliebe der alte Ort stehen.
                 prefs.placeName =
                     LocationHelper.placeName(this@MainActivity, location.latitude, location.longitude)
-                binding.txtPlace.text = placeLabel(location.latitude, location.longitude)
+                binding.txtPlace.text = prefs.placeName ?: getString(R.string.place_unknown)
 
                 val result = UvRepository.fetch(location.latitude, location.longitude)
                 snapshot = result
@@ -144,131 +140,87 @@ class MainActivity : AppCompatActivity() {
                 // Auch beim manuellen Abruf warnen, wenn die Schwelle erreicht ist.
                 UvCheckWorker.evaluate(this@MainActivity, prefs, result)
 
-                hideStatus()
+                hideNotice()
                 renderSnapshot(result)
             } catch (e: Exception) {
-                showStatus(getString(R.string.error_generic, e.message ?: e.javaClass.simpleName))
+                showNotice(getString(R.string.error_generic, e.message ?: e.javaClass.simpleName))
             } finally {
                 loading = false
-                binding.btnRefresh.isEnabled = true
+                binding.swipeRefresh.isRefreshing = false
             }
         }
     }
 
-    private fun changeThreshold(delta: Int) {
-        val value = (prefs.threshold + delta).coerceIn(1, 11)
-        if (value == prefs.threshold) return
-        prefs.threshold = value
-        // Zustand zurücksetzen, damit die neue Schwelle sofort greift.
-        prefs.wasAboveThreshold = false
-        prefs.preWarnDate = null
-        binding.txtThreshold.text = value.toString()
-        snapshot?.let { renderSnapshot(it, snapshotIsLive) }
-    }
+    // ---------------------------------------------------------- Darstellung
 
-    private fun setupIntervalSpinner() {
-        val adapter = ArrayAdapter.createFromResource(
-            this, R.array.interval_labels, android.R.layout.simple_spinner_item
-        )
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spInterval.adapter = adapter
-
-        val index = INTERVALS.indexOf(prefs.intervalMinutes).takeIf { it >= 0 }
-            ?: INTERVALS.indexOf(Prefs.DEFAULT_INTERVAL)
-        binding.spInterval.setSelection(index, false)
-
-        binding.spInterval.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (!spinnerInitialised) {
-                    spinnerInitialised = true
-                    return
-                }
-                prefs.intervalMinutes = INTERVALS[position]
-                if (prefs.warningsEnabled) {
-                    UvScheduler.schedule(this@MainActivity, prefs.intervalMinutes)
-                }
-            }
-
-            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
-        }
-    }
-
-    // ------------------------------------------------------------ Darstellung
-
-    /**
-     * Zeigt sofort den zuletzt gespeicherten Stand — dadurch ist die App auch
-     * ohne Netz und noch vor dem ersten Abruf brauchbar.
-     */
+    /** Zeigt sofort den gespeicherten Stand — auch ohne Netz. */
     private fun renderCached() {
-        binding.txtPlace.text = if (prefs.hasLocation) {
-            placeLabel(prefs.latitude ?: 0.0, prefs.longitude ?: 0.0)
-        } else {
-            getString(R.string.your_location)
-        }
+        binding.txtPlace.text = prefs.placeName ?: getString(R.string.place_unknown)
 
         lifecycleScope.launch {
             val cached = withContext(Dispatchers.Default) { UvRepository.loadCache(prefs) }
-            // Ein zwischenzeitlich gelaufener Abruf hat Vorrang.
-            if (cached != null && snapshot == null && !loading) {
-                snapshot = cached
-                snapshotIsLive = cached.isFresh()
-                renderSnapshot(cached, snapshotIsLive)
-                return@launch
-            }
-
-            val last = prefs.lastUv
-            if (last.isNaN() || snapshot != null) return@launch
-            applyCurrentValue(last)
-            binding.txtUpdated.text = if (prefs.lastCheckAt > 0L) {
-                getString(R.string.updated_cached, formatClock(prefs.lastCheckAt))
-            } else {
-                getString(R.string.updated_never)
-            }
+            if (cached == null || snapshot != null || loading) return@launch
+            snapshot = cached
+            snapshotIsLive = cached.isFresh()
+            renderSnapshot(cached, snapshotIsLive)
         }
     }
 
     private fun renderSnapshot(snap: UvSnapshot, live: Boolean = true) {
-        applyCurrentValue(snap.displayUv())
-        binding.txtUpdated.text = if (live) {
-            getString(R.string.updated_at, formatClock(snap.fetchedAt))
-        } else {
-            getString(R.string.updated_cached, formatClock(snap.fetchedAt))
-        }
-        renderToday(snap)
-        renderTomorrow(snap)
-        renderHours(snap)
-    }
-
-    private fun applyCurrentValue(uv: Double) {
+        val uv = snap.displayUv()
         val category = UvCategory.of(uv)
         val color = ContextCompat.getColor(this, category.colorRes)
+
         binding.txtUvValue.text = UvCheckWorker.format(uv)
         binding.txtUvValue.setTextColor(color)
         binding.txtUvCategory.text = getString(category.labelRes)
         binding.txtUvCategory.setTextColor(color)
         binding.txtAdvice.text = getString(category.adviceRes)
-        binding.viewUvStrip.setBackgroundColor(color)
+
+        binding.ringUv.setIndicatorColor(color)
+        binding.ringUv.trackColor = MaterialColors.compositeARGBWithAlpha(color, TRACK_ALPHA)
+        binding.ringUv.setProgressCompat(
+            ((uv / BAR_MAX) * 100.0).toInt().coerceIn(0, 100),
+            live
+        )
+
+        binding.txtUpdated.text = getString(R.string.updated_relative, relativeTime(snap.fetchedAt))
+
+        renderToday(snap)
+        renderHours(snap)
+        renderGuard()
     }
 
     private fun renderToday(snap: UvSnapshot) {
         val threshold = prefs.threshold
         val today = snap.localNow().toLocalDate()
-        val peak = snap.maxOn(today)
+        val peak = snap.maxOn(today) ?: run {
+            binding.cardToday.visibility = View.GONE
+            return
+        }
+        binding.cardToday.visibility = View.VISIBLE
+
         val first = snap.hoursOn(today).firstOrNull { it.uv >= threshold }
         val last = snap.lastAtOrAbove(threshold.toDouble(), today)
 
-        binding.txtToday.text = if (first != null && last != null && peak != null) {
+        binding.txtToday.text = if (first != null && last != null) {
             getString(
-                R.string.today_summary,
+                R.string.today_span,
                 threshold,
                 first.time.format(timeFormat),
-                last.time.plusHours(1).format(timeFormat),
-                UvCheckWorker.format(peak.uv),
-                peak.time.format(timeFormat)
+                last.time.plusHours(1).format(timeFormat)
             )
         } else {
-            getString(R.string.today_below, threshold, UvCheckWorker.format(peak?.uv ?: 0.0))
+            getString(R.string.today_calm, threshold)
         }
+
+        binding.txtTodayPeak.text = getString(
+            R.string.today_peak,
+            UvCheckWorker.format(peak.uv),
+            peak.time.format(timeFormat)
+        )
+
+        renderTomorrow(snap)
     }
 
     private fun renderTomorrow(snap: UvSnapshot) {
@@ -278,84 +230,101 @@ class MainActivity : AppCompatActivity() {
 
         if (peak == null) {
             binding.txtTomorrow.visibility = View.GONE
-            binding.lblTomorrow.visibility = View.GONE
             return
         }
-
         binding.txtTomorrow.visibility = View.VISIBLE
-        binding.lblTomorrow.visibility = View.VISIBLE
 
-        val base = getString(
-            R.string.tomorrow_summary,
-            UvCheckWorker.format(peak.uv),
-            peak.time.format(timeFormat)
-        )
         val first = snap.hoursOn(tomorrow).firstOrNull { it.uv >= threshold }
         binding.txtTomorrow.text = if (first != null) {
-            base + getString(R.string.tomorrow_threshold, threshold, first.time.format(timeFormat))
+            getString(
+                R.string.tomorrow_span,
+                threshold,
+                first.time.format(timeFormat),
+                UvCheckWorker.format(peak.uv)
+            )
         } else {
-            base
+            getString(
+                R.string.tomorrow_peak,
+                UvCheckWorker.format(peak.uv),
+                peak.time.format(timeFormat)
+            )
         }
     }
 
     private fun renderHours(snap: UvSnapshot) {
+        val hours = snap.upcoming(HOURS_SHOWN)
+        if (hours.isEmpty()) {
+            binding.cardHours.visibility = View.GONE
+            return
+        }
+        binding.cardHours.visibility = View.VISIBLE
         binding.boxHours.removeAllViews()
-        val threshold = prefs.threshold
 
-        snap.upcoming(HOURS_SHOWN).forEach { hour ->
+        val trackHeight = dp(BAR_HEIGHT_DP)
+        val minHeight = dp(BAR_MIN_DP)
+        val currentHour = snap.localNow().hour
+        val subtle = MaterialColors.getColor(binding.boxHours, com.google.android.material.R.attr.colorOnSurfaceVariant)
+
+        hours.forEach { hour ->
             val row = ItemHourBinding.inflate(layoutInflater, binding.boxHours, false)
             val color = ContextCompat.getColor(this, UvCategory.of(hour.uv).colorRes)
+            val isNow = hour.time.hour == currentHour
 
             row.txtHour.text = hour.time.format(timeFormat)
-            row.txtHour.setTypeface(null, if (hour.uv >= threshold) Typeface.BOLD else Typeface.NORMAL)
+            row.txtHour.setTextColor(subtle)
             row.txtHourValue.text = UvCheckWorker.format(hour.uv)
             row.txtHourValue.setTextColor(color)
+            if (isNow) {
+                row.txtHour.setTypeface(null, Typeface.BOLD)
+                row.txtHour.setTextColor(color)
+            }
 
-            val filled = hour.uv.coerceIn(0.0, BAR_MAX).toFloat()
-            row.viewBar.layoutParams = (row.viewBar.layoutParams as LinearLayout.LayoutParams)
-                .apply { weight = filled }
-            row.viewBarRest.layoutParams = (row.viewBarRest.layoutParams as LinearLayout.LayoutParams)
-                .apply { weight = BAR_MAX.toFloat() - filled }
+            val filled = ((hour.uv / BAR_MAX) * trackHeight).toInt().coerceIn(minHeight, trackHeight)
+            row.viewBar.layoutParams = (row.viewBar.layoutParams as FrameLayout.LayoutParams)
+                .apply { height = filled }
             row.viewBar.background?.mutate()?.setTint(color)
+            row.boxBar.background?.mutate()
+                ?.setTint(MaterialColors.compositeARGBWithAlpha(color, TRACK_ALPHA))
 
             binding.boxHours.addView(row.root)
         }
     }
 
-    private fun placeLabel(latitude: Double, longitude: Double): String {
-        val name = prefs.placeName ?: getString(R.string.your_location)
-        return String.format(Locale.GERMAN, "%s · %.3f, %.3f", name, latitude, longitude)
+    private fun renderGuard() {
+        binding.txtGuard.text = if (prefs.warningsEnabled) {
+            getString(R.string.guard_on, prefs.threshold, intervalLabel(prefs.intervalMinutes))
+        } else {
+            getString(R.string.guard_off)
+        }
     }
 
-    private fun formatClock(epochMillis: Long): String =
-        LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneId.systemDefault())
-            .format(timeFormat)
+    private fun intervalLabel(minutes: Int): String = when (minutes) {
+        15 -> getString(R.string.interval_15_long)
+        30 -> getString(R.string.interval_30_long)
+        180 -> getString(R.string.interval_180_long)
+        else -> getString(R.string.interval_60_long)
+    }
 
-    private fun showStatus(message: String, error: Boolean = true) {
-        binding.txtStatus.text = message
-        binding.txtStatus.visibility = View.VISIBLE
-        binding.txtStatus.setTextColor(
-            MaterialColors.getColor(
-                binding.txtStatus,
-                if (error) {
-                    com.google.android.material.R.attr.colorError
-                } else {
-                    com.google.android.material.R.attr.colorOnSurfaceVariant
-                }
-            )
+    private fun relativeTime(epochMillis: Long): CharSequence {
+        val age = System.currentTimeMillis() - epochMillis
+        if (age < DateUtils.MINUTE_IN_MILLIS) return getString(R.string.just_now)
+        return DateUtils.getRelativeTimeSpanString(
+            epochMillis, System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS
         )
     }
 
-    private fun hideStatus() {
-        binding.txtStatus.visibility = View.GONE
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+
+    // -------------------------------------------------------------- Hinweise
+
+    private fun showNotice(message: String, withAction: Boolean = false) {
+        binding.txtNotice.text = message
+        binding.btnNotice.visibility = if (withAction) View.VISIBLE else View.GONE
+        binding.cardNotice.visibility = View.VISIBLE
     }
 
-    // ---------------------------------------------------------- Berechtigungen
-
-    private fun updatePermissionUi() {
-        val granted = LocationHelper.hasLocationPermission(this)
-        binding.btnPermission.visibility = if (granted) View.GONE else View.VISIBLE
-        if (!granted) showStatus(getString(R.string.permission_needed))
+    private fun hideNotice() {
+        binding.cardNotice.visibility = View.GONE
     }
 
     private fun requestLocationPermission() {
@@ -368,60 +337,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun askNotificationPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) return
         if (Notifier.canPostNotifications(this)) return
         notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 
-    /**
-     * Ohne Hintergrund-Standort funktioniert die Warnung weiterhin — dann eben
-     * mit der zuletzt in der App ermittelten Position. Deshalb nur ein Hinweis.
-     */
-    private fun maybeSuggestBackgroundLocation() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
-        if (!LocationHelper.hasLocationPermission(this)) return
-        if (LocationHelper.hasBackgroundPermission(this)) return
-        if (prefs.backgroundHintShown) return
-
-        prefs.backgroundHintShown = true
-        MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.background_title)
-            .setMessage(R.string.background_message)
-            .setPositiveButton(R.string.background_open) { _, _ -> openAppSettings() }
-            .setNegativeButton(R.string.background_later, null)
-            .show()
-    }
-
-    private fun openAppSettings() {
-        startActivitySafely(
-            Intent(
-                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                Uri.fromParts("package", packageName, null)
-            )
-        )
-    }
-
-    private fun openBatterySettings() {
-        try {
-            startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
-        } catch (e: Exception) {
-            // Nicht jedes Gerät hat diesen Bildschirm — dann die App-Details öffnen.
-            openAppSettings()
-        }
-    }
-
-    private fun startActivitySafely(intent: Intent) {
-        try {
-            startActivity(intent)
-        } catch (e: Exception) {
-            showStatus(getString(R.string.error_generic, e.message ?: e.javaClass.simpleName))
-        }
-    }
-
     companion object {
-        private val INTERVALS = listOf(15, 30, 60, 180)
         private const val HOURS_SHOWN = 12
         private const val BAR_MAX = 12.0
+        private const val BAR_HEIGHT_DP = 104
+        private const val BAR_MIN_DP = 6
+        private const val TRACK_ALPHA = 38
         private const val REFRESH_AFTER_MILLIS = 10L * 60L * 1000L
     }
 }

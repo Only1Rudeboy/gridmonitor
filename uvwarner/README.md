@@ -66,7 +66,12 @@ installierbar, aber bei jedem Rechner/Build eine andere Signatur.
 
 Der Workflow [`uvwarner.yml`](../.github/workflows/uvwarner.yml) baut die APK bei
 jedem Push auf `uvwarner/**` und legt sie als Artefakt **UV-Warner-APK** ab.
-Ein Tag `uv-v1.0` erzeugt zusätzlich ein GitHub-Release mit `UV-Warner.apk`.
+
+Ein GitHub-Release mit `UV-Warner.apk` entsteht auf zwei Wegen:
+
+- **Tag** `uv-v1.1` pushen — Release unter genau diesem Tag, oder
+- **`[release]`** in der Commit-Nachricht — der Tag wird aus `versionName`
+  gebildet (`uv-v1.1`) und von der Action selbst angelegt.
 
 ### Eigener Signaturschlüssel (empfohlen für Updates)
 

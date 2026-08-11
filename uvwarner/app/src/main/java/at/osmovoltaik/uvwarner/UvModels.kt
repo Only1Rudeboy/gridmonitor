@@ -1,6 +1,5 @@
 package at.osmovoltaik.uvwarner
 
-import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -60,9 +59,6 @@ data class UvSnapshot(
         val from = localNow().withMinute(0).withSecond(0).withNano(0)
         return hours.filter { !it.time.isBefore(from) }.take(count)
     }
-
-    fun minutesUntil(hour: HourUv): Long =
-        Duration.between(localNow(), hour.time).toMinutes()
 
     companion object {
         private const val FRESH_FOR_MILLIS = 30L * 60L * 1000L

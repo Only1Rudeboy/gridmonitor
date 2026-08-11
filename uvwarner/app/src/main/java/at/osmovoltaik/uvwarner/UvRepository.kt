@@ -1,6 +1,7 @@
 package at.osmovoltaik.uvwarner
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.IOException
@@ -17,6 +18,7 @@ object UvRepository {
 
     private const val ENDPOINT = "https://api.open-meteo.com/v1/forecast"
     private const val TIMEOUT_MS = 20_000
+    private const val RETRY_DELAY_MS = 1_500L
 
     /**
      * Holt die Vorhersage. Ein einzelner Fehlschlag (Funkloch beim Aufwachen)
@@ -27,6 +29,7 @@ object UvRepository {
         try {
             request(latitude, longitude)
         } catch (first: IOException) {
+            delay(RETRY_DELAY_MS)
             try {
                 request(latitude, longitude)
             } catch (second: IOException) {

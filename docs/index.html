@@ -156,6 +156,11 @@
   .dlgrow button.primary{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
   .dlgnote{font-size:9px;color:var(--faint);margin-top:10px;line-height:1.5}
   #attrib{text-align:center;font-size:9px;color:var(--faint);padding:2px 10px 8px}
+  #updbanner{background:rgba(45,212,191,.10);border:1px solid var(--cyan);color:var(--cyan);
+    border-radius:10px;padding:9px 12px;font-size:11px;margin-bottom:10px}
+  #updbanner a{color:var(--cyan);font-weight:700}
+  #negrow{margin-top:8px;font-size:11px;font-weight:600;color:var(--green)}
+  #heatinfo{font-size:10px;color:var(--dim);margin-top:6px;min-height:14px}
   #stale{background:rgba(245,179,66,.12);border:1px solid var(--amber);color:var(--amber);
     border-radius:10px;padding:9px 12px;font-size:11px;margin-bottom:10px}
   .cost{display:flex;align-items:baseline;font-size:12px;padding:6px 0;
@@ -180,6 +185,7 @@
   <div id="status"><span id="statusdot"></span><span id="statustxt">lädt …</span></div>
 </header>
 
+<div id="updbanner" class="hidden"></div>
 <div id="stale" class="hidden">⚠</div>
 <div class="card" id="heroCard">
   <h2><span class="led" id="heroled"></span>Preis jetzt</h2>
@@ -190,6 +196,7 @@
         <span class="unit">ct / kWh · brutto</span></div>
     </div>
     <span id="ratechip">…</span>
+    <div id="negrow" class="hidden"></div>
     <div id="trend"><span id="trendtxt"></span><span id="countdown"></span></div>
   </div>
 </div>
@@ -245,6 +252,13 @@
   <div id="histsum"></div>
 </div>
 
+<div class="card hidden" id="heatCard">
+  <h2><span class="led" style="background:var(--cyan)"></span>Jahres-Heatmap
+      <span class="note">Ø-Preis je Monat und Stunde · tippen für Details</span></h2>
+  <canvas id="heat" class="plot"></canvas>
+  <div id="heatinfo"></div>
+</div>
+
 <div class="card hidden" id="archCard">
   <h2><span class="led" style="background:var(--amber)"></span>Archiv · Tagesansicht
       <span class="note">jeder Tag seit Aufzeichnungsbeginn</span></h2>
@@ -284,6 +298,8 @@
       <input type="checkbox" id="t_snap"></label>
     <label id="t_notirow" class="hidden">Meldung, wenn das Ladefenster beginnt
       <input type="checkbox" id="t_noti"></label>
+    <label id="t_alarmrow" class="hidden">Preis-Alarm unter … ct (leer = aus)
+      <input id="t_alarm" inputmode="decimal"></label>
     <div class="dlgrow">
       <button id="t_cancel">Abbrechen</button>
       <button id="t_save" class="primary">Speichern</button>
@@ -316,6 +332,9 @@ function pushTarif() {
         mwst: CFG.mwst, best_window_hours: CFG.best_window_hours,
         notify_window: CFG.notify_window !== false,
         snap: CFG.snap !== false,
+        alarm_ct: CFG.alarm_ct || 0,
+        price_cheap: CFG.price_cheap, price_expensive: CFG.price_expensive,
+        netz_snap_ap_ct: CFG.netz_snap_ap_ct != null ? CFG.netz_snap_ap_ct : -1,
         netz_ap_ct: CFG.netz_ap_ct != null ? CFG.netz_ap_ct : -1,
         netz_verlust_ct: CFG.netz_verlust_ct != null ? CFG.netz_verlust_ct : -1}));
   } catch (e) {}
@@ -624,6 +643,13 @@ function renderHero() {
   const chip = $("ratechip");
   chip.textContent = label; chip.style.color = col; chip.style.borderColor = col;
   chip.style.background = col + "22";
+  const neg = $("negrow");
+  if (cur && cur.epex < 0) {
+    neg.textContent = "⚡ Börse " + de(cur.epex) + " ct — negativ! Verbrauchen lohnt doppelt";
+    neg.classList.remove("hidden");
+  } else {
+    neg.classList.add("hidden");
+  }
   if (cur && S.nxt) {
     const d = S.nxt.effective - cur.effective;
     const arrow = d > .15 ? "▲" : d < -.15 ? "▼" : "→";
@@ -841,7 +867,7 @@ function renderSlots() {
     const inWin = bw && p.start >= bw.start && p.start < bw.end;
     const frac = Math.max(5, (p.effective - mn) / span * 100);
     out += `<div class="slot${inWin ? " win" : ""}" style="border-left-color:${col}">` +
-      `<span class="z">${hm(p.start)}</span>` +
+      `<span class="z">${hm(p.start)}${p.epex < 0 ? " ⚡" : ""}</span>` +
       `<span class="bar"><i style="width:${frac}%;background:${col}"></i></span>` +
       `<span class="p" style="color:${col}">${de(p.effective)}</span></div>`;
   }
@@ -973,6 +999,81 @@ function renderHist() {
     `bei täglich ${de(CFG.charge_kwh, 0)} kWh</span>`;
 }
 
+/* ==================== Jahres-Heatmap: Monat × Stunde ==================== */
+let heatGeo = null;
+function renderHeat() {
+  const card = $("heatCard");
+  if (!HISTRAW) { card.classList.add("hidden"); heatGeo = null; return; }
+  const days = Object.keys(HISTRAW).sort();
+  if (days.length < 60) { card.classList.add("hidden"); heatGeo = null; return; }
+  card.classList.remove("hidden");
+  const acc = new Map();                    // "JJJJ-MM|Stunde" -> [Summe, Anzahl]
+  for (const ds of days) {
+    const d = HISTRAW[ds], res = d.res || 15, ym = ds.slice(0, 7);
+    for (let i = 0; i < d.epex.length; i++) {
+      const k = ym + "|" + (Math.floor(i * res / 60) % 24);
+      const a = acc.get(k) || [0, 0];
+      a[0] += d.epex[i]; a[1]++;
+      acc.set(k, a);
+    }
+  }
+  const months = [...new Set(days.map(x => x.slice(0, 7)))].sort().slice(-12);
+  const [ctx, w, h] = setupCanvas($("heat"), 240);
+  ctx.clearRect(0, 0, w, h);
+  const left = 24, top = 4, bottom = 16;
+  const cw = (w - left - 2) / months.length;
+  const chh = (h - top - bottom) / 24;
+  ctx.font = "9px sans-serif";
+  const cells = [];
+  months.forEach((ym, mi) => {
+    for (let hh = 0; hh < 24; hh++) {
+      const a = acc.get(ym + "|" + hh);
+      if (!a) continue;
+      const epexAvg = a[0] / a[1];
+      const when = new Date(ym + "-15T" + String(hh).padStart(2, "0") + ":30:00");
+      const v = effAt(epexAvg, when);
+      ctx.fillStyle = priceColor(v);
+      ctx.fillRect(left + mi * cw + .5, top + hh * chh + .5, cw - 1, chh - 1);
+      cells.push({mi, hh, v, ym});
+    }
+  });
+  ctx.fillStyle = COL.faint;
+  ctx.textAlign = "right";
+  for (const hh of [0, 6, 12, 18]) {
+    ctx.fillText(String(hh).padStart(2, "0"), left - 3, top + (hh + .5) * chh + 3);
+  }
+  ctx.textAlign = "center";
+  months.forEach((ym, mi) => {
+    if (months.length <= 6 || mi % 2 === 0) {
+      const d = new Date(ym + "-15");
+      ctx.fillText(d.toLocaleDateString("de-AT", {month: "short"}), left + (mi + .5) * cw, h - 4);
+    }
+  });
+  heatGeo = {months, left, top, cw, chh, cells};
+  if (!$("heatinfo").textContent) {
+    $("heatinfo").textContent = "Grün = günstig · Rot = teuer — das Mittagstal ist " +
+      "im Sommer am tiefsten (Photovoltaik).";
+  }
+}
+function heatPick(clientX, clientY) {
+  if (!heatGeo) return;
+  const r = $("heat").getBoundingClientRect();
+  const x = clientX - r.left, y = clientY - r.top;
+  const mi = Math.floor((x - heatGeo.left) / heatGeo.cw);
+  const hh = Math.floor((y - heatGeo.top) / heatGeo.chh);
+  if (mi < 0 || mi >= heatGeo.months.length || hh < 0 || hh > 23) return;
+  const cell = heatGeo.cells.find(c => c.mi === mi && c.hh === hh);
+  if (!cell) return;
+  const d = new Date(cell.ym + "-15");
+  $("heatinfo").textContent = d.toLocaleDateString("de-AT",
+    {month: "long", year: "numeric"}) + " · " + String(hh).padStart(2, "0") +
+    "–" + String(hh + 1).padStart(2, "0") + " Uhr · Ø " + de(cell.v) + " ct/kWh";
+}
+for (const ev of ["touchstart", "touchmove"])
+  $("heat").addEventListener(ev, e =>
+    heatPick(e.touches[0].clientX, e.touches[0].clientY), {passive: true});
+$("heat").addEventListener("mousemove", e => heatPick(e.clientX, e.clientY));
+
 /* ==================== Archiv: Tagesansicht ==================== */
 let ARCHDATE = null, archGeo = null;
 const archDays = () => HISTRAW ? Object.keys(HISTRAW).sort() : [];
@@ -1081,7 +1182,7 @@ $("arch").addEventListener("mouseleave", () => renderArch(null));
 function renderAll() {
   renderHero(); renderWindow(); renderChart(null); updateTipbar(null);
   renderRaster(); renderSlots(); renderParts(); renderCosts(); renderHist();
-  renderArch(null);
+  renderHeat(); renderArch(null);
 }
 const pn = (v, lo, hi, fb) => {
   const x = parseFloat(String(v).replace(",", "."));
@@ -1141,6 +1242,8 @@ function openTarif() {
   $("t_kwh").value = de(CFG.charge_kwh, 0);
   $("t_notirow").classList.toggle("hidden", !window.AndroidBridge);
   $("t_noti").checked = CFG.notify_window !== false;
+  $("t_alarmrow").classList.toggle("hidden", !window.AndroidBridge);
+  $("t_alarm").value = CFG.alarm_ct > 0 ? de(CFG.alarm_ct, 0) : "";
   $("t_snap").checked = CFG.snap !== false;
   $("tarifdlg").classList.remove("hidden");
 }
@@ -1180,6 +1283,7 @@ $("t_save").addEventListener("click", () => {
   if (t.price_expensive <= t.price_cheap) t.price_expensive = t.price_cheap + 1;
   t.notify_window = $("t_noti").checked;
   t.snap = $("t_snap").checked;
+  t.alarm_ct = $("t_alarm").value.trim() === "" ? 0 : pn($("t_alarm").value, 0, 100, 0);
   if (regComp) {
     t.netz_ap_ct = regComp.ap;
     t.netz_verlust_ct = regComp.vl;
@@ -1199,6 +1303,25 @@ document.addEventListener("visibilitychange", () => {
   if (!document.hidden) loadData();
 });
 window.addEventListener("resize", () => { if (S) renderAll(); });
+async function checkUpdate() {
+  try {
+    if (!window.AndroidBridge || !AndroidBridge.getVersion) return;
+    const mine = AndroidBridge.getVersion();
+    if (!mine) return;
+    const r = await fetch(
+      "https://api.github.com/repos/Only1Rudeboy/gridmonitor/releases/latest",
+      {cache: "no-store"});
+    if (!r.ok) return;
+    const latest = ((await r.json()).tag_name || "").replace(/^v/, "");
+    const num = s => s.split(".").reduce((a, x) => a * 1000 + (parseInt(x, 10) || 0), 0);
+    if (latest && num(latest) > num(mine)) {
+      $("updbanner").innerHTML = "📲 Version " + latest +
+        ' ist da — <a href="' + APK_URL + '">jetzt aktualisieren</a>';
+      $("updbanner").classList.remove("hidden");
+    }
+  } catch (e) {}
+}
+checkUpdate();
 if ("serviceWorker" in navigator && location.protocol === "https:") {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }

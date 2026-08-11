@@ -147,9 +147,14 @@ def main():
             days = json.load(f).get("days", {})
     except Exception:
         pass
+    try:
+        from zoneinfo import ZoneInfo
+        local_tz = ZoneInfo("Europe/Vienna")
+    except Exception:
+        local_tz = dt.timezone(dt.timedelta(hours=2))
     by_day = {}
     for p in prices:
-        local = p["start"].astimezone(dt.timezone(dt.timedelta(hours=2)))  # grob CEST
+        local = p["start"].astimezone(local_tz)
         by_day.setdefault(local.date().isoformat(), []).append(p)
     today = dt.datetime.now(UTC).date().isoformat()
     for day, slots in by_day.items():

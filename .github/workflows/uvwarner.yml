@@ -37,6 +37,18 @@ jobs:
           echo "$UV_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/uvwarner.jks"
           echo "UV_KEYSTORE_FILE=$RUNNER_TEMP/uvwarner.jks" >> "$GITHUB_ENV"
 
+      - name: Unit-Tests
+        working-directory: uvwarner
+        run: ./gradlew --no-daemon testDebugUnitTest
+
+      - name: Testbericht sichern
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Testbericht
+          path: uvwarner/app/build/reports/tests/
+          if-no-files-found: ignore
+
       - name: APK bauen
         working-directory: uvwarner
         env:

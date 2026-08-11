@@ -11,10 +11,18 @@ erreicht (Standard: **4**). Kein Konto, kein API-Schlüssel, kein eigener Server
 - **Vorwarnung** bis zu drei Stunden bevor die Schwelle erreicht wird
 - **Tagesübersicht:** von wann bis wann die Schwelle überschritten wird,
   Höchstwert und Uhrzeit
+- **Morgen-Vorschau** mit Höchstwert und ab wann die Schwelle fällt
 - **Balkenverlauf** der nächsten 12 Stunden
 - **Hintergrundprüfung** über WorkManager, Intervall wählbar
   (15 / 30 / 60 / 180 Minuten), übersteht Neustarts
+- **Offline brauchbar:** der letzte Stand wird gespeichert und beim Öffnen
+  sofort angezeigt — inklusive Stundenverlauf
 - Keine Google-Play-Dienste nötig (reiner `LocationManager`)
+
+Sparsam mit Akku und Datenvolumen: nachts wird gar nicht erst abgerufen, wenn
+die gespeicherte Vorhersage für die nächsten Stunden ohnehin 0 sagt. Beim
+Öffnen der App wird nur nachgeladen, wenn der letzte Abruf über 10 Minuten
+zurückliegt. Ein fehlgeschlagener Abruf wird einmal sofort wiederholt.
 
 Gewarnt wird jeweils **einmal pro Überschreitung** — erst wenn der Wert wieder
 unter die Schwelle fällt, ist die nächste Warnung möglich. Die Vorwarnung kommt
@@ -36,13 +44,18 @@ Open-Meteo übertragen; die Position bleibt sonst auf dem Gerät.
 | Internet | Abruf der UV-Daten |
 | Neustart empfangen | Prüfung nach Reboot wieder aktivieren |
 
-## Bauen
+## Bauen und testen
 
 ```bash
 cd uvwarner
+./gradlew testDebugUnitTest      # Warnlogik und Auswertung der API-Antwort
 ./gradlew assembleRelease
 # → app/build/outputs/apk/release/app-release.apk
 ```
+
+Die Entscheidung „wird gewarnt?" steckt in [`UvWarningLogic`](app/src/main/java/at/osmovoltaik/uvwarner/UvWarningLogic.kt)
+— bewusst ohne Android-Abhängigkeiten, damit sie als reiner Unit-Test prüfbar
+ist (Schwellenüberschreitung, Vorwarnfenster, Doppelmeldungen, Nachtabschaltung).
 
 Voraussetzungen: JDK 17, Android SDK (compileSdk 35). minSdk 26 (Android 8).
 

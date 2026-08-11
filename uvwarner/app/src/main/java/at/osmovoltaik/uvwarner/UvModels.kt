@@ -19,10 +19,28 @@ data class UvSnapshot(
     val utcOffsetSeconds: Int,
     val timezone: String,
     val hours: List<HourUv>,
-    val fetchedAt: Long = System.currentTimeMillis()
+    val fetchedAt: Long = System.currentTimeMillis(),
+    /** Rohantwort, damit die Vorhersage offline weiterverwendet werden kann. */
+    val raw: String = ""
 ) {
     fun localNow(): LocalDateTime =
         LocalDateTime.ofInstant(Instant.now(), ZoneOffset.ofTotalSeconds(utcOffsetSeconds))
+
+    fun ageMillis(): Long = System.currentTimeMillis() - fetchedAt
+
+    /** Frisch genug, dass [current] noch der aktuelle Wert ist. */
+    fun isFresh(): Boolean = ageMillis() < FRESH_FOR_MILLIS
+
+    /**
+     * Anzuzeigender Wert: solange der Abruf frisch ist [current], danach der
+     * Vorhersagewert der laufenden Stunde — so bleibt auch ein gespeicherter
+     * Stand brauchbar.
+     */
+    fun displayUv(): Double {
+        if (isFresh()) return current
+        val hour = localNow().withMinute(0).withSecond(0).withNano(0)
+        return hours.firstOrNull { it.time == hour }?.uv ?: current
+    }
 
     fun hoursOn(date: LocalDate): List<HourUv> = hours.filter { it.time.toLocalDate() == date }
 
@@ -45,6 +63,10 @@ data class UvSnapshot(
 
     fun minutesUntil(hour: HourUv): Long =
         Duration.between(localNow(), hour.time).toMinutes()
+
+    companion object {
+        private const val FRESH_FOR_MILLIS = 30L * 60L * 1000L
+    }
 }
 
 /** WHO-Kategorien des UV-Index. */

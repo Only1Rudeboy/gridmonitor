@@ -61,6 +61,20 @@ class Prefs(context: Context) {
         get() = sp.getLong(KEY_LAST_CHECK, 0L)
         set(value) = sp.edit().putLong(KEY_LAST_CHECK, value).apply()
 
+    /** Zuletzt erfolgreich geholte Rohantwort (für Offline-Anzeige). */
+    val cachedResponse: String?
+        get() = sp.getString(KEY_CACHE, null)
+
+    val cachedAt: Long
+        get() = sp.getLong(KEY_CACHE_TIME, 0L)
+
+    fun saveCachedResponse(body: String, fetchedAt: Long) {
+        sp.edit()
+            .putString(KEY_CACHE, body)
+            .putLong(KEY_CACHE_TIME, fetchedAt)
+            .apply()
+    }
+
     /** Hinweis auf Hintergrund-Standort wurde schon gezeigt. */
     var backgroundHintShown: Boolean
         get() = sp.getBoolean(KEY_BG_HINT, false)
@@ -86,5 +100,7 @@ class Prefs(context: Context) {
         private const val KEY_LAST_UV = "last_uv"
         private const val KEY_LAST_CHECK = "last_check"
         private const val KEY_BG_HINT = "bg_hint"
+        private const val KEY_CACHE = "cache_body"
+        private const val KEY_CACHE_TIME = "cache_time"
     }
 }

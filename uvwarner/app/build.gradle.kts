@@ -17,8 +17,8 @@ android {
         applicationId = "at.osmovoltaik.uvwarner"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
     }
 
     signingConfigs {
@@ -66,4 +66,8 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.9.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+
+    testImplementation("junit:junit:4.13.2")
+    // Echte org.json-Implementierung — im Unit-Test ist die Android-Variante nur ein Stub.
+    testImplementation("org.json:json:20231013")
 }

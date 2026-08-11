@@ -55,6 +55,9 @@
     <string name="today_headline">Heute</string>
     <string name="today_summary">UV %1$d wird von %2$s bis %3$s Uhr erreicht. Höchstwert %4$s um %5$s Uhr.</string>
     <string name="today_below">Der UV-Index bleibt heute unter %1$d. Höchstwert %2$s.</string>
+    <string name="tomorrow_headline">Morgen</string>
+    <string name="tomorrow_summary">Höchstwert %1$s um %2$s Uhr.</string>
+    <string name="tomorrow_threshold">" UV %1$d ab %2$s Uhr."</string>
     <string name="hours_headline">Nächste Stunden</string>
 
     <string name="background_title">Standort im Hintergrund</string>

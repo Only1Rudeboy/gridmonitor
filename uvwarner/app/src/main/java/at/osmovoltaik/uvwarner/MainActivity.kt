@@ -19,7 +19,9 @@ import at.osmovoltaik.uvwarner.databinding.ActivityMainBinding
 import at.osmovoltaik.uvwarner.databinding.ItemHourBinding
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -32,6 +34,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var prefs: Prefs
 
     private var snapshot: UvSnapshot? = null
+    private var snapshotIsLive = false
     private var loading = false
     private var spinnerInitialised = false
 
@@ -88,7 +91,9 @@ class MainActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         updatePermissionUi()
-        if (LocationHelper.hasLocationPermission(this) && snapshot == null && !loading) {
+        // Beim Öffnen nur nachladen, wenn der gespeicherte Stand alt genug ist.
+        val stale = System.currentTimeMillis() - prefs.lastCheckAt > REFRESH_AFTER_MILLIS
+        if (LocationHelper.hasLocationPermission(this) && !loading && stale) {
             refresh()
         }
     }
@@ -124,14 +129,17 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 prefs.saveLocation(location.latitude, location.longitude)
-                LocationHelper.placeName(this@MainActivity, location.latitude, location.longitude)
-                    ?.let { prefs.placeName = it }
+                // Auch ein leerer Name wird übernommen, sonst bliebe der alte Ort stehen.
+                prefs.placeName =
+                    LocationHelper.placeName(this@MainActivity, location.latitude, location.longitude)
                 binding.txtPlace.text = placeLabel(location.latitude, location.longitude)
 
                 val result = UvRepository.fetch(location.latitude, location.longitude)
                 snapshot = result
+                snapshotIsLive = true
                 prefs.lastUv = result.current
                 prefs.lastCheckAt = result.fetchedAt
+                UvRepository.saveCache(prefs, result)
 
                 // Auch beim manuellen Abruf warnen, wenn die Schwelle erreicht ist.
                 UvCheckWorker.evaluate(this@MainActivity, prefs, result)
@@ -155,7 +163,7 @@ class MainActivity : AppCompatActivity() {
         prefs.wasAboveThreshold = false
         prefs.preWarnDate = null
         binding.txtThreshold.text = value.toString()
-        snapshot?.let { renderSnapshot(it) }
+        snapshot?.let { renderSnapshot(it, snapshotIsLive) }
     }
 
     private fun setupIntervalSpinner() {
@@ -187,6 +195,10 @@ class MainActivity : AppCompatActivity() {
 
     // ------------------------------------------------------------ Darstellung
 
+    /**
+     * Zeigt sofort den zuletzt gespeicherten Stand — dadurch ist die App auch
+     * ohne Netz und noch vor dem ersten Abruf brauchbar.
+     */
     private fun renderCached() {
         binding.txtPlace.text = if (prefs.hasLocation) {
             placeLabel(prefs.latitude ?: 0.0, prefs.longitude ?: 0.0)
@@ -194,20 +206,36 @@ class MainActivity : AppCompatActivity() {
             getString(R.string.your_location)
         }
 
-        val last = prefs.lastUv
-        if (last.isNaN()) return
-        applyCurrentValue(last)
-        binding.txtUpdated.text = if (prefs.lastCheckAt > 0L) {
-            getString(R.string.updated_cached, formatClock(prefs.lastCheckAt))
-        } else {
-            getString(R.string.updated_never)
+        lifecycleScope.launch {
+            val cached = withContext(Dispatchers.Default) { UvRepository.loadCache(prefs) }
+            // Ein zwischenzeitlich gelaufener Abruf hat Vorrang.
+            if (cached != null && snapshot == null && !loading) {
+                snapshot = cached
+                snapshotIsLive = cached.isFresh()
+                renderSnapshot(cached, snapshotIsLive)
+                return@launch
+            }
+
+            val last = prefs.lastUv
+            if (last.isNaN() || snapshot != null) return@launch
+            applyCurrentValue(last)
+            binding.txtUpdated.text = if (prefs.lastCheckAt > 0L) {
+                getString(R.string.updated_cached, formatClock(prefs.lastCheckAt))
+            } else {
+                getString(R.string.updated_never)
+            }
         }
     }
 
-    private fun renderSnapshot(snap: UvSnapshot) {
-        applyCurrentValue(snap.current)
-        binding.txtUpdated.text = getString(R.string.updated_at, formatClock(snap.fetchedAt))
+    private fun renderSnapshot(snap: UvSnapshot, live: Boolean = true) {
+        applyCurrentValue(snap.displayUv())
+        binding.txtUpdated.text = if (live) {
+            getString(R.string.updated_at, formatClock(snap.fetchedAt))
+        } else {
+            getString(R.string.updated_cached, formatClock(snap.fetchedAt))
+        }
         renderToday(snap)
+        renderTomorrow(snap)
         renderHours(snap)
     }
 
@@ -240,6 +268,33 @@ class MainActivity : AppCompatActivity() {
             )
         } else {
             getString(R.string.today_below, threshold, UvCheckWorker.format(peak?.uv ?: 0.0))
+        }
+    }
+
+    private fun renderTomorrow(snap: UvSnapshot) {
+        val threshold = prefs.threshold
+        val tomorrow = snap.localNow().toLocalDate().plusDays(1)
+        val peak = snap.maxOn(tomorrow)
+
+        if (peak == null) {
+            binding.txtTomorrow.visibility = View.GONE
+            binding.lblTomorrow.visibility = View.GONE
+            return
+        }
+
+        binding.txtTomorrow.visibility = View.VISIBLE
+        binding.lblTomorrow.visibility = View.VISIBLE
+
+        val base = getString(
+            R.string.tomorrow_summary,
+            UvCheckWorker.format(peak.uv),
+            peak.time.format(timeFormat)
+        )
+        val first = snap.hoursOn(tomorrow).firstOrNull { it.uv >= threshold }
+        binding.txtTomorrow.text = if (first != null) {
+            base + getString(R.string.tomorrow_threshold, threshold, first.time.format(timeFormat))
+        } else {
+            base
         }
     }
 
@@ -367,5 +422,6 @@ class MainActivity : AppCompatActivity() {
         private val INTERVALS = listOf(15, 30, 60, 180)
         private const val HOURS_SHOWN = 12
         private const val BAR_MAX = 12.0
+        private const val REFRESH_AFTER_MILLIS = 10L * 60L * 1000L
     }
 }

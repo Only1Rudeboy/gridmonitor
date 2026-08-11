@@ -18,8 +18,40 @@ object UvRepository {
     private const val ENDPOINT = "https://api.open-meteo.com/v1/forecast"
     private const val TIMEOUT_MS = 20_000
 
+    /**
+     * Holt die Vorhersage. Ein einzelner Fehlschlag (Funkloch beim Aufwachen)
+     * wird einmal wiederholt, bevor aufgegeben wird.
+     */
     @Throws(IOException::class)
     suspend fun fetch(latitude: Double, longitude: Double): UvSnapshot = withContext(Dispatchers.IO) {
+        try {
+            request(latitude, longitude)
+        } catch (first: IOException) {
+            try {
+                request(latitude, longitude)
+            } catch (second: IOException) {
+                throw first
+            }
+        }
+    }
+
+    /** Speichert die Rohantwort, damit sie offline weiterverwendet werden kann. */
+    fun saveCache(prefs: Prefs, snapshot: UvSnapshot) {
+        if (snapshot.raw.isBlank()) return
+        prefs.saveCachedResponse(snapshot.raw, snapshot.fetchedAt)
+    }
+
+    /** Liefert die zuletzt gespeicherte Vorhersage, oder null. */
+    fun loadCache(prefs: Prefs): UvSnapshot? {
+        val body = prefs.cachedResponse ?: return null
+        return try {
+            parse(body, prefs.cachedAt)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun request(latitude: Double, longitude: Double): UvSnapshot {
         val url = URL(
             String.format(
                 Locale.US,
@@ -46,10 +78,10 @@ object UvRepository {
             connection.disconnect()
         }
 
-        parse(body)
+        return parse(body)
     }
 
-    internal fun parse(body: String): UvSnapshot {
+    internal fun parse(body: String, fetchedAt: Long = System.currentTimeMillis()): UvSnapshot {
         val root = JSONObject(body)
         if (root.optBoolean("error", false)) {
             throw IOException(root.optString("reason", "Unbekannter Fehler der UV-Schnittstelle"))
@@ -94,7 +126,9 @@ object UvRepository {
             currentTime = currentTime,
             utcOffsetSeconds = utcOffset,
             timezone = timezone,
-            hours = hours
+            hours = hours,
+            fetchedAt = fetchedAt,
+            raw = body
         )
     }
 

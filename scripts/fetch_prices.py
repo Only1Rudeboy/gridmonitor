@@ -14,7 +14,7 @@ import requests
 
 UTC = dt.timezone.utc
 DOCS = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs")
-KEEP_DAYS = 45
+KEEP_DAYS = 400
 
 
 def res_minutes(text):

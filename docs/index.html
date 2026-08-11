@@ -106,6 +106,22 @@
   #ptotal{display:flex;justify-content:space-between;border-top:1px solid var(--line);
     margin-top:8px;padding-top:8px;font-size:12px;color:var(--dim)}
   #ptotal b{font-size:15px;font-weight:600}
+  /* Archiv */
+  #histrange{display:flex;gap:6px;margin-bottom:8px}
+  .hr{flex:none;background:var(--surface2);border:1px solid var(--line);color:var(--dim);
+    border-radius:8px;padding:5px 12px;font-size:10px;font-family:inherit}
+  .hr.on{border-color:var(--cyan);color:var(--cyan);background:rgba(45,212,191,.08)}
+  #archnav{display:flex;gap:8px;margin-bottom:8px}
+  #archnav input{flex:1;background:var(--surface2);border:1px solid var(--line);
+    color:var(--text);border-radius:9px;padding:7px 10px;font-size:12px;
+    font-family:inherit;color-scheme:dark}
+  .anav{flex:none;width:40px;background:var(--surface2);border:1px solid var(--line);
+    color:var(--cyan);border-radius:9px;font-size:13px}
+  #archtip{display:flex;justify-content:space-between;align-items:baseline;
+    background:var(--surface2);border:1px solid var(--line);border-radius:9px;
+    padding:6px 10px;margin-bottom:8px;font-size:11px;color:var(--dim)}
+  #archtip b{font-size:14px;font-weight:600}
+  #archstats{font-size:10px;color:var(--dim);margin-top:8px;line-height:1.6}
   /* Historie */
   #histsum{font-size:10px;color:var(--dim);margin-top:6px;line-height:1.6}
   #histsum .sp{color:var(--cyan)}
@@ -219,9 +235,27 @@
 </div>
 
 <div class="card" id="histCard">
-  <h2><span class="led"></span>Preis-Historie · 30 Tage</h2>
+  <h2><span class="led"></span>Preis-Historie <span class="note" id="histn"></span></h2>
+  <div id="histrange">
+    <button class="hr on" data-n="30">30 Tage</button>
+    <button class="hr" data-n="90">90 Tage</button>
+    <button class="hr" data-n="365">1 Jahr</button>
+  </div>
   <canvas id="hist" class="plot"></canvas>
   <div id="histsum"></div>
+</div>
+
+<div class="card hidden" id="archCard">
+  <h2><span class="led" style="background:var(--amber)"></span>Archiv · Tagesansicht
+      <span class="note">jeder Tag seit Aufzeichnungsbeginn</span></h2>
+  <div id="archnav">
+    <button class="anav" id="archprev">◀</button>
+    <input type="date" id="archdate">
+    <button class="anav" id="archnext">▶</button>
+  </div>
+  <div id="archtip"><span id="a_zeit">–</span><b id="a_preis">–</b><span id="a_boerse"></span></div>
+  <canvas id="arch" class="plot"></canvas>
+  <div id="archstats"></div>
 </div>
 
 <footer>
@@ -883,12 +917,20 @@ function histStats() {
   }
   return out;
 }
+let HISTN = 30;
+document.querySelectorAll("#histrange .hr").forEach(b => b.addEventListener("click", () => {
+  HISTN = parseInt(b.dataset.n, 10);
+  document.querySelectorAll("#histrange .hr").forEach(x =>
+    x.classList.toggle("on", x === b));
+  renderHist();
+}));
 function renderHist() {
   const card = $("histCard");
   const stats = histStats();
   if (!stats || stats.length < 3) { card.classList.add("hidden"); return; }
   card.classList.remove("hidden");
-  const days = stats.slice(-30);
+  const days = stats.slice(-HISTN);
+  $("histn").textContent = days.length + " Tage";
   const [ctx, w, h] = setupCanvas($("hist"), 130);
   ctx.clearRect(0, 0, w, h);
   const left = 26, top = 6, bottom = 16;
@@ -914,24 +956,132 @@ function renderHist() {
   ctx.strokeStyle = COL.blue; ctx.lineWidth = 2;
   ctx.beginPath(); days.forEach((d, i) => ctx.lineTo(X(i), Y(d.avg))); ctx.stroke();
   ctx.fillStyle = COL.faint; ctx.textAlign = "center";
-  const st = Math.max(1, Math.round(days.length / 5));
-  for (let i = 0; i < days.length; i += st) {
+  const st2 = Math.max(1, Math.round(days.length / 5));
+  for (let i = 0; i < days.length; i += st2) {
     const dd = new Date(days[i].date);
-    ctx.fillText(dd.getDate() + "." + (dd.getMonth() + 1) + ".", X(i), h - 4);
+    ctx.fillText(days.length > 120
+      ? dd.toLocaleDateString("de-AT", {month: "short"}) + " " + String(dd.getFullYear()).slice(2)
+      : dd.getDate() + "." + (dd.getMonth() + 1) + ".", X(i), h - 4);
   }
   const avgAll = days.reduce((a, d) => a + d.avg, 0) / days.length;
   const wavgAll = days.reduce((a, d) => a + d.wavg, 0) / days.length;
   const save = Math.max(0, (avgAll - wavgAll) * CFG.charge_kwh / 100 * 30);
+  const st = Math.max(1, Math.round(days.length / 5));
   $("histsum").innerHTML =
     `Ø ${days.length} Tage: <b>${de(avgAll)}</b> ct · bestes ${CFG.best_window_hours}-h-Fenster: ` +
     `Ø <b>${de(wavgAll)}</b> ct/kWh<br><span class="sp">Sparpotenzial ≈ ${de(save, 0)} € im Monat ` +
     `bei täglich ${de(CFG.charge_kwh, 0)} kWh</span>`;
 }
 
+/* ==================== Archiv: Tagesansicht ==================== */
+let ARCHDATE = null, archGeo = null;
+const archDays = () => HISTRAW ? Object.keys(HISTRAW).sort() : [];
+function archSlots(dateStr) {
+  const d = HISTRAW[dateStr];
+  const res = d.res || 15;
+  const base = new Date(dateStr + "T00:00:00");
+  return d.epex.map((v, i) => {
+    const start = new Date(base.getTime() + i * res * 60000);
+    return {start, epex: v, effective: effAt(v, start), res};
+  });
+}
+function renderArch(sel) {
+  const card = $("archCard");
+  const days = archDays();
+  if (days.length < 2) { card.classList.add("hidden"); archGeo = null; return; }
+  card.classList.remove("hidden");
+  const inp = $("archdate");
+  inp.min = days[0];
+  inp.max = days[days.length - 1];
+  if (!ARCHDATE || !HISTRAW[ARCHDATE]) ARCHDATE = days[days.length - 1];
+  inp.value = ARCHDATE;
+  const slots = archSlots(ARCHDATE);
+  const [ctx, w, h] = setupCanvas($("arch"), 150);
+  ctx.clearRect(0, 0, w, h);
+  const left = 26, top = 6, bottom = 16;
+  const cw = w - left - 6, ch = h - top - bottom;
+  const t0 = slots[0].start, t1 = slotEnd(slots[slots.length - 1]);
+  const total = t1 - t0;
+  let vmn = Math.min(...slots.map(s => s.effective));
+  let vmx = Math.max(...slots.map(s => s.effective));
+  if (vmx - vmn < 2) vmx = vmn + 2;
+  const m = (vmx - vmn) * .1; vmn -= m; vmx += m;
+  const X = t => left + cw * (t - t0) / total;
+  const Y = v => top + ch * (1 - (v - vmn) / (vmx - vmn));
+  archGeo = {slots, t0, total, left, cw, top, ch};
+  ctx.font = "9px sans-serif";
+  for (let gi = 0; gi < 4; gi++) {
+    const v = vmn + (vmx - vmn) * gi / 3;
+    ctx.strokeStyle = mixc(COL.surface, COL.line, .85); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(left, Y(v)); ctx.lineTo(left + cw, Y(v)); ctx.stroke();
+    ctx.fillStyle = COL.faint; ctx.textAlign = "right";
+    ctx.fillText(v.toFixed(0), left - 4, Y(v) + 3);
+  }
+  const bw = bestWindow(slots, CFG.best_window_hours);
+  if (bw) {
+    ctx.fillStyle = "rgba(61,220,151,.10)";
+    ctx.fillRect(X(bw.start), top, X(bw.end) - X(bw.start), ch);
+  }
+  if (sel != null) {
+    const p = slots[sel];
+    ctx.fillStyle = "rgba(45,212,191,.13)";
+    ctx.fillRect(X(p.start), top, X(slotEnd(p)) - X(p.start), ch);
+  }
+  for (let i = 0; i < slots.length; i++) {
+    const p = slots[i], y = Y(p.effective);
+    ctx.strokeStyle = priceColor(p.effective); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(X(p.start), y); ctx.lineTo(X(slotEnd(p)), y); ctx.stroke();
+  }
+  ctx.fillStyle = COL.faint; ctx.textAlign = "center";
+  for (let hh = 0; hh <= 24; hh += 3) {
+    const t = new Date(t0.getTime() + hh * 36e5);
+    if (t <= t1) ctx.fillText(String(hh).padStart(2, "0"), X(t), h - 4);
+  }
+  const effs = slots.map(s => s.effective);
+  const avg = effs.reduce((a, b) => a + b, 0) / effs.length;
+  $("archstats").innerHTML =
+    `Ø <b>${de(avg)}</b> · min ${de(Math.min(...effs))} · max ${de(Math.max(...effs))} ct/kWh` +
+    (bw ? ` · bestes ${CFG.best_window_hours}-h-Fenster <b>${hm(bw.start)}–${hm(bw.end)}</b>` +
+          ` Ø <span class="sp">${de(bw.avg)}</span>` : "");
+  const show = sel != null ? slots[sel]
+    : slots.reduce((a, b) => b.effective < a.effective ? b : a);
+  $("a_zeit").textContent = hm(show.start) + " – " + hm(slotEnd(show));
+  $("a_preis").textContent = de(show.effective) + " ct/kWh";
+  $("a_preis").style.color = priceColor(show.effective);
+  $("a_boerse").textContent = "Börse " + de(show.epex) + " ct" +
+    (CFG.snap !== false && isSnap(show.start) ? " · SNAP" : "");
+}
+function archStep(delta) {
+  const days = archDays();
+  const i = days.indexOf(ARCHDATE) + delta;
+  if (i >= 0 && i < days.length) { ARCHDATE = days[i]; renderArch(null); }
+}
+$("archprev").addEventListener("click", () => archStep(-1));
+$("archnext").addEventListener("click", () => archStep(1));
+$("archdate").addEventListener("change", () => {
+  const days = archDays();
+  ARCHDATE = days.includes($("archdate").value) ? $("archdate").value : ARCHDATE;
+  renderArch(null);
+});
+function archPick(clientX) {
+  if (!archGeo) return;
+  const rect = $("arch").getBoundingClientRect();
+  const x = clientX - rect.left;
+  if (x < archGeo.left || x > archGeo.left + archGeo.cw) return;
+  const tt = new Date(archGeo.t0.getTime() + (x - archGeo.left) / archGeo.cw * archGeo.total);
+  const idx = archGeo.slots.findIndex(p => p.start <= tt && tt < slotEnd(p));
+  if (idx >= 0) renderArch(idx);
+}
+for (const ev of ["touchstart", "touchmove"])
+  $("arch").addEventListener(ev, e => archPick(e.touches[0].clientX), {passive: true});
+$("arch").addEventListener("mousemove", e => archPick(e.clientX));
+$("arch").addEventListener("mouseleave", () => renderArch(null));
+
 /* ==================== Gesamt-Render + Zyklus ==================== */
 function renderAll() {
   renderHero(); renderWindow(); renderChart(null); updateTipbar(null);
   renderRaster(); renderSlots(); renderParts(); renderCosts(); renderHist();
+  renderArch(null);
 }
 const pn = (v, lo, hi, fb) => {
   const x = parseFloat(String(v).replace(",", "."));

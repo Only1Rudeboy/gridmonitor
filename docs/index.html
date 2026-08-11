@@ -245,6 +245,8 @@
     <label>Schwelle teuer (ct)<input id="t_teu" inputmode="decimal"></label>
     <label>Ladefenster (Stunden)<input id="t_std" inputmode="numeric"></label>
     <label>Lademenge (kWh)<input id="t_kwh" inputmode="decimal"></label>
+    <label>SNAP-Rabatt berücksichtigen (Apr–Sep, 10–16 Uhr)
+      <input type="checkbox" id="t_snap"></label>
     <label id="t_notirow" class="hidden">Meldung, wenn das Ladefenster beginnt
       <input type="checkbox" id="t_noti"></label>
     <div class="dlgrow">
@@ -277,7 +279,10 @@ function pushTarif() {
       AndroidBridge.setTarif(JSON.stringify({
         aufschlag_ct: CFG.aufschlag_ct, netzentgelt_ct: CFG.netzentgelt_ct,
         mwst: CFG.mwst, best_window_hours: CFG.best_window_hours,
-        notify_window: CFG.notify_window !== false}));
+        notify_window: CFG.notify_window !== false,
+        snap: CFG.snap !== false,
+        netz_ap_ct: CFG.netz_ap_ct != null ? CFG.netz_ap_ct : -1,
+        netz_verlust_ct: CFG.netz_verlust_ct != null ? CFG.netz_verlust_ct : -1}));
   } catch (e) {}
 }
 function rebuildCfg() {
@@ -291,7 +296,21 @@ rebuildCfg();
 const $ = id => document.getElementById(id);
 const de = (v, n = 2) => v.toFixed(n).replace(".", ",");
 const hm = t => t.toLocaleTimeString("de-AT", {hour: "2-digit", minute: "2-digit"});
-const eff = epex => Math.round(((epex + CFG.aufschlag_ct) * CFG.mwst + CFG.netzentgelt_ct) * 100) / 100;
+function isSnap(d) {                 // SNAP: Apr–Sep, täglich 10–16 Uhr
+  const m = d.getMonth() + 1;
+  return m >= 4 && m <= 9 && d.getHours() >= 10 && d.getHours() < 16;
+}
+function netzAt(when) {
+  if (CFG.snap === false || !when || !isSnap(when)) return CFG.netzentgelt_ct;
+  if (CFG.netz_ap_ct != null && CFG.netz_verlust_ct != null) {
+    const ap = CFG.netz_snap_ap_ct != null ? CFG.netz_snap_ap_ct : CFG.netz_ap_ct * 0.8;
+    return Math.round((ap + CFG.netz_verlust_ct) * CFG.mwst * 100) / 100;
+  }
+  return Math.round(CFG.netzentgelt_ct * 0.8 * 100) / 100;   // Näherung ohne Komponenten
+}
+const effAt = (epex, when) =>
+  Math.round(((epex + CFG.aufschlag_ct) * CFG.mwst + netzAt(when)) * 100) / 100;
+const eff = epex => effAt(epex, null);
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const COL = {};
 for (const n of ["surface","surface2","row","line","text","dim","faint","blue","cyan","green","amber","red"])
@@ -336,8 +355,10 @@ let LASTRAW = null;      // zuletzt geladene Roh-Preisliste
 let sourceName = "—", sourceMode = "—";
 function process() {     // Brutto immer clientseitig aus dem eigenen Tarif rechnen
   if (!LASTRAW) return;
-  analyse(LASTRAW.map(p => ({start: new Date(p.start), epex: p.epex,
-    effective: eff(p.epex), res: p.res})));
+  analyse(LASTRAW.map(p => {
+    const start = new Date(p.start);
+    return {start, epex: p.epex, effective: effAt(p.epex, start), res: p.res};
+  }));
   renderAll();
 }
 
@@ -726,7 +747,8 @@ function updateTipbar(p) {
   $("tipzeit").textContent = hm(p.start) + " – " + hm(slotEnd(p));
   $("tippreis").textContent = de(p.effective) + " ct/kWh";
   $("tippreis").style.color = priceColor(p.effective);
-  $("tipboerse").textContent = "Börse " + de(p.epex) + " ct";
+  $("tipboerse").textContent = "Börse " + de(p.epex) + " ct" +
+    (CFG.snap !== false && isSnap(p.start) ? " · SNAP" : "");
 }
 function chartPick(clientX) {
   if (!chartGeo) return;
@@ -796,12 +818,14 @@ function renderParts() {
   const cur = S.cur;
   if (!cur) return;
   const energie = cur.epex + CFG.aufschlag_ct;
+  const netzNow = netzAt(cur.start);
+  const snapAktiv = netzNow < CFG.netzentgelt_ct - 0.001;
   const parts = [
     ["Börsenpreis (EPEX)", cur.epex, COL.blue],
     ["Aufschlag", CFG.aufschlag_ct, mixc(COL.blue, COL.cyan, .55)],
     [`MwSt ${Math.round((CFG.mwst - 1) * 100)} % auf Energie`, energie * (CFG.mwst - 1),
       mixc(COL.cyan, COL.dim, .6)],
-    ["Netzentgelt (ohne MwSt)", CFG.netzentgelt_ct, COL.cyan]];
+    [snapAktiv ? "Netzentgelt · SNAP −20 %" : "Netzentgelt", netzNow, COL.cyan]];
   const scale = parts.reduce((a, p) => a + Math.abs(p[1]), 0) || 1;
   $("stack").innerHTML = parts.map(([, v, c]) =>
     `<i style="width:${Math.abs(v) / scale * 100}%;background:${v < 0 ? COL.green : c}"></i>`).join("");
@@ -840,7 +864,9 @@ function histStats() {
   const out = [];
   for (const dateStr of Object.keys(HISTRAW).sort()) {
     const d = HISTRAW[dateStr];
-    const effs = d.epex.map(eff);
+    const base = new Date(dateStr + "T00:00:00");
+    const effs = d.epex.map((v, i) =>
+      effAt(v, new Date(base.getTime() + i * (d.res || 15) * 60000)));
     const n = effs.length;
     if (!n) continue;
     const win = Math.max(1, Math.round(CFG.best_window_hours * 60 / (d.res || 15)));
@@ -922,6 +948,10 @@ function presetInfo() {
     const a = PRESETS.anbieter.find(x => x.id === $("t_anb").value);
     if (a && a.info) parts.push(a.name + ": " + a.info);
     if ($("t_reg").value) parts.push(PRESETS.netz_hinweis);
+    if ($("t_snap") && $("t_snap").checked && PRESETS.snap_hinweis)
+      parts.push(regComp ? PRESETS.snap_hinweis
+                         : "SNAP ohne Netzgebiets-Auswahl: Näherung (−20 % aufs "
+                           + "gesamte Netzentgelt). " + PRESETS.snap_hinweis);
     if (parts.length) parts.push(PRESETS.hinweis);
   }
   box.textContent = parts.join(" — ");
@@ -947,6 +977,9 @@ function openTarif() {
     fillSelect($("t_anb"), PRESETS.anbieter, saved.p_anb || "");
     fillSelect($("t_reg"), PRESETS.netz, saved.p_reg || "");
   }
+  regComp = (saved.netz_ap_ct != null)
+    ? {ap: saved.netz_ap_ct, vl: saved.netz_verlust_ct,
+       sap: saved.netz_snap_ap_ct} : null;
   presetInfo();
   $("t_auf").value = de(CFG.aufschlag_ct);
   $("t_netz").value = de(CFG.netzentgelt_ct);
@@ -957,6 +990,7 @@ function openTarif() {
   $("t_kwh").value = de(CFG.charge_kwh, 0);
   $("t_notirow").classList.toggle("hidden", !window.AndroidBridge);
   $("t_noti").checked = CFG.notify_window !== false;
+  $("t_snap").checked = CFG.snap !== false;
   $("tarifdlg").classList.remove("hidden");
 }
 $("t_anb").addEventListener("change", () => {
@@ -964,11 +998,19 @@ $("t_anb").addEventListener("change", () => {
   if (a && a.aufschlag_ct != null) $("t_auf").value = de(a.aufschlag_ct);
   presetInfo();
 });
+let regComp = null;                    // Netz-Komponenten des gewählten Gebiets
 $("t_reg").addEventListener("change", () => {
   const n = PRESETS && PRESETS.netz.find(x => x.id === $("t_reg").value);
-  if (n) $("t_netz").value = de(n.netz_ct);
+  if (n) {
+    $("t_netz").value = de(n.netz_ct);
+    regComp = (n.netz_ap_ct != null)
+      ? {ap: n.netz_ap_ct, vl: n.netz_verlust_ct, sap: n.snap_ap_ct} : null;
+  } else {
+    regComp = null;
+  }
   presetInfo();
 });
+$("t_netz").addEventListener("input", () => { regComp = null; });
 $("tarifbtn").addEventListener("click", openTarif);
 $("t_cancel").addEventListener("click", () => $("tarifdlg").classList.add("hidden"));
 $("tarifdlg").addEventListener("click", e => {
@@ -986,6 +1028,12 @@ $("t_save").addEventListener("click", () => {
   };
   if (t.price_expensive <= t.price_cheap) t.price_expensive = t.price_cheap + 1;
   t.notify_window = $("t_noti").checked;
+  t.snap = $("t_snap").checked;
+  if (regComp) {
+    t.netz_ap_ct = regComp.ap;
+    t.netz_verlust_ct = regComp.vl;
+    if (regComp.sap != null) t.netz_snap_ap_ct = regComp.sap;
+  }
   t.p_anb = $("t_anb") ? $("t_anb").value : "";
   t.p_reg = $("t_reg") ? $("t_reg").value : "";
   localStorage.gmTarif = JSON.stringify(t);

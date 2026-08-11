@@ -68,72 +68,115 @@
   {
    "id": "burgenland",
    "name": "Burgenland",
-   "netz_ct": 10.15
+   "netz_ct": 10.15,
+   "netz_ap_ct": 8.46,
+   "netz_verlust_ct": 0.0,
+   "snap_ap_ct": 6.77
   },
   {
    "id": "kaernten",
    "name": "Kärnten",
-   "netz_ct": 12.05
+   "netz_ct": 12.05,
+   "netz_ap_ct": 9.67,
+   "netz_verlust_ct": 0.368,
+   "snap_ap_ct": 7.74
   },
   {
    "id": "klagenfurt",
    "name": "Klagenfurt",
-   "netz_ct": 8.97
+   "netz_ct": 8.97,
+   "netz_ap_ct": 6.9,
+   "netz_verlust_ct": 0.578,
+   "snap_ap_ct": 5.52
   },
   {
    "id": "niederoesterreich",
    "name": "Niederösterreich",
-   "netz_ct": 11.01
+   "netz_ct": 11.01,
+   "netz_ap_ct": 8.79,
+   "netz_verlust_ct": 0.384,
+   "snap_ap_ct": 7.03
   },
   {
    "id": "oberoesterreich",
    "name": "Oberösterreich",
-   "netz_ct": 8.18
+   "netz_ct": 8.18,
+   "netz_ap_ct": 6.29,
+   "netz_verlust_ct": 0.528,
+   "snap_ap_ct": 5.03
   },
   {
    "id": "linz",
    "name": "Linz",
-   "netz_ct": 7.27
+   "netz_ct": 7.27,
+   "netz_ap_ct": 5.57,
+   "netz_verlust_ct": 0.487,
+   "snap_ap_ct": 4.46
   },
   {
    "id": "salzburg",
    "name": "Salzburg",
-   "netz_ct": 8.34
+   "netz_ct": 8.34,
+   "netz_ap_ct": 6.59,
+   "netz_verlust_ct": 0.357,
+   "snap_ap_ct": 5.27
   },
   {
    "id": "steiermark",
    "name": "Steiermark",
-   "netz_ct": 10.99
+   "netz_ct": 10.99,
+   "netz_ap_ct": 8.82,
+   "netz_verlust_ct": 0.336,
+   "snap_ap_ct": 7.06
   },
   {
    "id": "graz",
    "name": "Graz",
-   "netz_ct": 6.99
+   "netz_ct": 6.99,
+   "netz_ap_ct": 5.17,
+   "netz_verlust_ct": 0.658,
+   "snap_ap_ct": 4.14
   },
   {
    "id": "tirol",
    "name": "Tirol",
-   "netz_ct": 8.52
+   "netz_ct": 8.52,
+   "netz_ap_ct": 6.81,
+   "netz_verlust_ct": 0.293,
+   "snap_ap_ct": 5.45
   },
   {
    "id": "innsbruck",
    "name": "Innsbruck",
-   "netz_ct": 10.18
+   "netz_ct": 10.18,
+   "netz_ap_ct": 8.03,
+   "netz_verlust_ct": 0.453,
+   "snap_ap_ct": 6.42
   },
   {
    "id": "vorarlberg",
    "name": "Vorarlberg",
-   "netz_ct": 6.42
+   "netz_ct": 6.42,
+   "netz_ap_ct": 4.96,
+   "netz_verlust_ct": 0.393,
+   "snap_ap_ct": 3.97
   },
   {
    "id": "wien",
    "name": "Wien",
-   "netz_ct": 9.22
+   "netz_ct": 9.22,
+   "netz_ap_ct": 6.98,
+   "netz_verlust_ct": 0.7,
+   "snap_ap_ct": 5.58
   },
   {
    "id": "kleinwalsertal",
    "name": "Kleinwalsertal",
-   "netz_ct": 21.76
+   "netz_ct": 21.76,
+   "netz_ap_ct": 17.73,
+   "netz_verlust_ct": 0.401,
+   "snap_ap_ct": 14.18
   }
- ]
+ ],
+ "snap_hinweis": "SNAP (Sommer-Nieder-Arbeitspreis): 1. April – 30. September, täglich 10–16 Uhr, 20 % Rabatt auf den Netz-Arbeitspreis (nicht auf das Verlustentgelt). Gilt automatisch bei aktiver Viertelstundenmessung; ausgenommen sind Mengen in Energiegemeinschaften. Quelle: BGBl. II Nr. 305/2025, § 5 Abs. 1b."
 }

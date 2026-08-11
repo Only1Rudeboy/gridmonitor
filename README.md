@@ -42,6 +42,7 @@ eigenen Stromrechnung abgleichen. Zentral gepflegt in
 - **aWATTAR HOURLY:** [awattar.at/tariffs/hourly](https://www.awattar.at/tariffs/hourly)
 - **Anbietervergleich dynamische Tarife:** [Smart Meter Portal (Stand 06/2026)](https://www.smartmeter-portal.at/dynamischer-stromtarif/anbieter-vergleich/)
 - **Verbund HOURLY:** [Selectra](https://selectra.at/strom/anbieter/verbund/tarife) (ca.-Wert)
+- **SNAP-Rabatt (Netz, Apr–Sep 10–16 Uhr):** [BGBl. II Nr. 305/2025, § 5 Abs. 1b](https://www.ris.bka.gv.at/eli/bgbl/II/2025/305) · Bestätigung u. a. [Vorarlberg Netz](https://www.vorarlbergnetz.at/SNAP.htm), [IKB](https://www.ikb.at/energie/smart-meter/sommer-nieder-arbeitspreis)
 - **Preisdaten:** [ENTSO-E Transparency](https://transparency.entsoe.eu) · [SMARD/Energy-Charts](https://www.energy-charts.info) (CC BY 4.0)
 - **VKW Strom Dynamisch:** Aufschlag laut Anbieter (1,20 ct/kWh netto)
 

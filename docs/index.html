@@ -307,6 +307,8 @@
       <input type="checkbox" id="t_noti"></label>
     <label id="t_alarmrow" class="hidden">Preis-Alarm unter … ct (leer = aus)
       <input id="t_alarm" inputmode="decimal"></label>
+    <label id="t_pcrow" class="hidden">PC-Adresse für „Mein Verbrauch" (leer = aus)
+      <input id="t_pc" inputmode="url" placeholder="z. B. 192.168.1.109"></label>
     <div class="dlgrow">
       <button id="t_cancel">Abbrechen</button>
       <button id="t_save" class="primary">Speichern</button>
@@ -1301,6 +1303,9 @@ function openTarif() {
   $("t_noti").checked = CFG.notify_window !== false;
   $("t_alarmrow").classList.toggle("hidden", !window.AndroidBridge);
   $("t_alarm").value = CFG.alarm_ct > 0 ? de(CFG.alarm_ct, 0) : "";
+  $("t_pcrow").classList.toggle("hidden", location.protocol !== "file:");
+  $("t_pc").value = (localStorage.gmServer || "")
+    .replace(/^https?:\/\//, "").replace(/:8480$/, "");
   $("t_snap").checked = CFG.snap !== false;
   $("tarifdlg").classList.remove("hidden");
 }
@@ -1349,6 +1354,18 @@ $("t_save").addEventListener("click", () => {
   t.p_anb = $("t_anb") ? $("t_anb").value : "";
   t.p_reg = $("t_reg") ? $("t_reg").value : "";
   localStorage.gmTarif = JSON.stringify(t);
+  if (location.protocol === "file:") {
+    const pc = $("t_pc").value.trim();
+    const old = localStorage.gmServer || "";
+    if (pc) {
+      let u = pc.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+      if (!/:\d+$/.test(u)) u += ":8480";
+      localStorage.gmServer = "http://" + u;
+    } else {
+      delete localStorage.gmServer;
+    }
+    if ((localStorage.gmServer || "") !== old) setTimeout(loadData, 50);
+  }
   rebuildCfg();
   process();
   updateTarifBtn();

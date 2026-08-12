@@ -252,6 +252,13 @@
   <div id="histsum"></div>
 </div>
 
+<div class="card hidden" id="verbCard">
+  <h2><span class="led" style="background:var(--green)"></span>Mein Verbrauch &amp; Kosten
+      <span class="note" id="verbn"></span></h2>
+  <div id="verbrows"></div>
+  <div id="verbsum"></div>
+</div>
+
 <div class="card hidden" id="heatCard">
   <h2><span class="led" style="background:var(--cyan)"></span>Jahres-Heatmap
       <span class="note">Ø-Preis je Monat und Stunde · tippen für Details</span></h2>
@@ -405,6 +412,7 @@ async function loadPresets() {
 let S = null;            // aktueller Auswertungs-Stand
 let HIST = [];           // Tagesstatistiken vom PC-Widget (brutto, fertig)
 let HISTRAW = null;      // Roh-Historie vom Verteiler (Börsenpreise je Tag)
+let VERB = [];           // eigener Verbrauch + Kosten je Tag (nur vom PC-Widget)
 let LASTRAW = null;      // zuletzt geladene Roh-Preisliste
 let sourceName = "—", sourceMode = "—";
 function process() {     // Brutto immer clientseitig aus dem eigenen Tarif rechnen
@@ -490,6 +498,13 @@ async function loadData() {
     try { HISTRAW = JSON.parse(localStorage.gmHistRaw || "null"); } catch (e) { HISTRAW = null; }
     if (!HISTRAW) { try { HIST = JSON.parse(localStorage.gmHist || "[]"); } catch (e) { HIST = []; } }
   }
+  if (payload.verbrauch && payload.verbrauch.length) {
+    VERB = payload.verbrauch;
+    try { localStorage.gmVerb = JSON.stringify(VERB); } catch (e) {}
+  } else if (sourceMode !== "PC-Widget") {
+    try { VERB = JSON.parse(localStorage.gmVerb || "null") || []; } catch (e) { VERB = []; }
+  }
+  renderVerb();
   try { localStorage.gmData = JSON.stringify(payload); } catch (e) {}
   sourceName = payload.source || "?";
   LASTRAW = payload.prices;
@@ -863,6 +878,35 @@ function renderRaster() {
 }
 
 /* ==================== Nächste Slots ==================== */
+function renderVerb() {
+  const card = $("verbCard");
+  if (!VERB.length) { card.classList.add("hidden"); return; }
+  card.classList.remove("hidden");
+  const days = VERB.slice(-14);
+  const mx = Math.max(...days.map(d => d.eur), 0.01);
+  let out = "";
+  for (const d of days) {
+    const dat = new Date(d.date + "T12:00:00");
+    const frac = Math.max(5, d.eur / mx * 100);
+    const col = d.exact ? COL.green : COL.amber;
+    out += `<div class="slot" style="border-left-color:${col}">` +
+      `<span class="z">${dat.toLocaleDateString("de-AT", {weekday: "short", day: "2-digit", month: "2-digit"})}</span>` +
+      `<span class="bar"><i style="width:${frac}%;background:${col}"></i></span>` +
+      `<span class="p" style="color:${col}">${d.exact ? "" : "≈"}${de(d.eur)} €</span></div>`;
+  }
+  $("verbrows").innerHTML = out;
+  const eur = days.reduce((a, d) => a + d.eur, 0), kwh = days.reduce((a, d) => a + d.kwh, 0);
+  const exact = days.some(d => d.exact);
+  $("verbn").textContent = "Smart Meter · Stand " +
+    new Date(days[days.length - 1].date + "T12:00:00").toLocaleDateString("de-AT",
+      {day: "2-digit", month: "2-digit"});
+  $("verbsum").innerHTML = `<b>Σ ${days.length} Tage: ${de(eur)} € · ${de(kwh, 1)} kWh</b><br>` +
+    (exact ? "15-Minuten-genau aus deinen Zählerdaten"
+           : "≈ Tagesverbrauch × Tages-Ø-Preis — 15-Minuten-Werte folgen nach der PIN-Freischaltung") +
+    " · Daten bleiben lokal (nur vom eigenen PC geladen)";
+  $("verbsum").style.cssText = "margin-top:8px;font-size:12px;color:var(--dim)";
+}
+
 function renderSlots() {
   const up = S.future.filter(p => !S.cur || p.start > S.cur.start).slice(0, 12);
   if (!up.length) { $("slots").innerHTML = '<div class="leer">keine Daten</div>'; return; }

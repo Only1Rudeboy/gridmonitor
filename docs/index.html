@@ -3,15 +3,46 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b0f15">
+<meta name="theme-color" content="#0b0f15" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f7fb" media="(prefers-color-scheme: light)">
+<script>try{var _t=localStorage.gmTheme;
+if(_t==="light"||_t==="dark")document.documentElement.dataset.theme=_t;}catch(e){}</script>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <title>Grid Monitor</title>
 <style>
   :root{
     --bg:#0b0f15; --bg2:#070a0f; --surface:#131a24; --surface2:#1a2331; --row:#161e2a;
-    --line:#222c3b; --text:#e7eef8; --dim:#7d8b9e; --faint:#3a4759;
+    --line:#222c3b; --text:#e7eef8; --text2:#b9c4d4; --dim:#7d8b9e; --faint:#3a4759;
     --blue:#4c8dff; --cyan:#2dd4bf; --green:#3ddc97; --amber:#f5b342; --red:#ff6b7a;
+    --oncolor:#07110c; --onaccent:#07110c; --nowring:#4c8dff; --track:#212b3a;
+    --scrim:rgba(0,0,0,.6);
+    --wash-green:rgba(61,220,151,.09); --wash-cyan:rgba(45,212,191,.10);
+    --wash-blue:rgba(76,141,255,.15); --wash-amber:rgba(245,179,66,.12);
+    --islight:0; color-scheme:dark;
+  }
+  /* Helle Fassung: alle Werte auf Kontrast geprüft (Text ≥ 5,1 : 1 in jeder Rolle) */
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg:#f4f7fb; --bg2:#e6ecf5; --surface:#ffffff; --surface2:#eaeff6; --row:#eef3f9;
+      --line:#d3dbe6; --text:#0d1620; --text2:#3f4b59; --dim:#54606f; --faint:#5f6b7b;
+      --blue:#1857c4; --cyan:#0e6b78; --green:#127a45; --amber:#a35c07; --red:#c02434;
+      --oncolor:#ffffff; --onaccent:#ffffff; --nowring:#0d1620; --track:#cdd6e3;
+      --scrim:rgba(15,23,32,.45);
+      --wash-green:rgba(18,122,69,.10); --wash-cyan:rgba(14,107,120,.10);
+      --wash-blue:rgba(24,87,196,.12); --wash-amber:rgba(163,92,7,.12);
+      --islight:1; color-scheme:light;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#f4f7fb; --bg2:#e6ecf5; --surface:#ffffff; --surface2:#eaeff6; --row:#eef3f9;
+    --line:#d3dbe6; --text:#0d1620; --text2:#3f4b59; --dim:#54606f; --faint:#5f6b7b;
+    --blue:#1857c4; --cyan:#0e6b78; --green:#127a45; --amber:#a35c07; --red:#c02434;
+    --oncolor:#ffffff; --onaccent:#ffffff; --nowring:#0d1620; --track:#cdd6e3;
+    --scrim:rgba(15,23,32,.45);
+    --wash-green:rgba(18,122,69,.10); --wash-cyan:rgba(14,107,120,.10);
+    --wash-blue:rgba(24,87,196,.12); --wash-amber:rgba(163,92,7,.12);
+    --islight:1; color-scheme:light;
   }
   *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent}
   html,body{overflow-x:hidden}
@@ -43,7 +74,7 @@
   #ring{width:230px;height:210px}
   #price{position:absolute;left:0;right:0;top:58px;line-height:1}
   #price .int{font-size:64px;font-weight:200}
-  #price .dec{font-size:26px;font-weight:200;color:#b9c4d4;vertical-align:28px;margin-left:2px}
+  #price .dec{font-size:26px;font-weight:200;color:var(--text2);vertical-align:28px;margin-left:2px}
   #price .unit{display:block;font-size:12px;color:var(--dim);margin-top:6px}
   #ratechip{display:inline-block;margin-top:2px;font-size:11px;font-weight:700;
     padding:5px 16px;border-radius:14px;border:1px solid}
@@ -62,7 +93,7 @@
   .fh{font-size:11px;color:var(--faint)}
   .fbadge2{border-radius:10px;padding:5px 11px;text-align:center;font-size:13px;flex:none}
   .fbadge2 small{display:block;font-size:8px;color:var(--dim)}
-  .fbadge2.best{border:1px solid var(--green);color:var(--green);background:rgba(61,220,151,.08)}
+  .fbadge2.best{border:1px solid var(--green);color:var(--green);background:var(--wash-green)}
   .fbadge2.alt{border:1px solid var(--line);color:var(--dim)}
   .kpis{display:flex;margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
   .kpi{flex:1;text-align:center;border-left:1px solid var(--line)}
@@ -81,15 +112,15 @@
   .rasterrow .rl{width:44px;font-size:9px;font-weight:700;color:var(--dim);flex:none}
   .cell{flex:1;min-width:0;overflow:hidden;height:30px;border-radius:3px;display:flex;
     align-items:center;justify-content:center;font-size:7px;font-weight:700;
-    color:#07110c;background:var(--surface2)}
-  .cell.now{outline:2px solid var(--blue);outline-offset:-1px}
+    color:var(--oncolor);background:var(--surface2)}
+  .cell.now{outline:2px solid var(--nowring);outline-offset:-1px}
   .rasterhours{display:flex;gap:1px;margin-left:45px;font-size:8px;color:var(--faint)}
   .rasterhours span{flex:1;min-width:0;text-align:center}
   .leer{font-size:10px;color:var(--faint);flex:24;text-align:center}
   /* Slots */
   .slot{display:flex;align-items:center;gap:8px;background:var(--row);border-radius:9px;
     padding:7px 10px;margin-bottom:5px;border-left:3px solid var(--faint)}
-  .slot.win{background:rgba(61,220,151,.09)}
+  .slot.win{background:var(--wash-green)}
   .slot .z{font-size:13px;width:44px}
   .slot .bar{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
   .slot .bar i{display:block;height:100%;border-radius:3px}
@@ -110,11 +141,11 @@
   #histrange{display:flex;gap:6px;margin-bottom:8px}
   .hr{flex:none;background:var(--surface2);border:1px solid var(--line);color:var(--dim);
     border-radius:8px;padding:5px 12px;font-size:10px;font-family:inherit}
-  .hr.on{border-color:var(--cyan);color:var(--cyan);background:rgba(45,212,191,.08)}
+  .hr.on{border-color:var(--cyan);color:var(--cyan);background:var(--wash-cyan)}
   #archnav{display:flex;gap:8px;margin-bottom:8px}
   #archnav input{flex:1;background:var(--surface2);border:1px solid var(--line);
     color:var(--text);border-radius:9px;padding:7px 10px;font-size:12px;
-    font-family:inherit;color-scheme:dark}
+    font-family:inherit}
   .anav{flex:none;width:40px;background:var(--surface2);border:1px solid var(--line);
     color:var(--cyan);border-radius:9px;font-size:13px}
   #archtip{display:flex;justify-content:space-between;align-items:baseline;
@@ -134,12 +165,12 @@
     justify-content:center;font-size:15px;flex:none}
   .abtn b{display:block;font-size:12.5px;font-weight:600}
   .abtn small{display:block;font-size:9px;color:var(--dim);margin-top:2px}
-  #tarifbtn .bicon{background:rgba(76,141,255,.15);color:var(--blue)}
-  #reload .bicon{background:rgba(45,212,191,.15);color:var(--cyan)}
+  #tarifbtn .bicon{background:var(--wash-blue);color:var(--blue)}
+  #reload .bicon{background:var(--wash-cyan);color:var(--cyan)}
   #sponsor{text-align:center;font-size:10px;color:var(--dim);padding:0 10px 8px}
   .hidden{display:none}
   /* Tarif-Dialog */
-  #tarifdlg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;
+  #tarifdlg{position:fixed;inset:0;background:var(--scrim);z-index:50;
     display:flex;align-items:center;justify-content:center;padding:20px}
   #tarifdlg.hidden{display:none}
   .dlg{background:var(--surface);border:1px solid var(--line);border-radius:16px;
@@ -153,15 +184,15 @@
   .dlgrow{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
   .dlgrow button{border-radius:9px;padding:9px 16px;font-size:12px;border:1px solid var(--line);
     background:var(--surface2);color:var(--dim)}
-  .dlgrow button.primary{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
+  .dlgrow button.primary{background:var(--blue);color:var(--onaccent);border-color:var(--blue);font-weight:600}
   .dlgnote{font-size:9px;color:var(--faint);margin-top:10px;line-height:1.5}
   #attrib{text-align:center;font-size:9px;color:var(--faint);padding:2px 10px 8px}
-  #updbanner{background:rgba(45,212,191,.10);border:1px solid var(--cyan);color:var(--cyan);
+  #updbanner{background:var(--wash-cyan);border:1px solid var(--cyan);color:var(--cyan);
     border-radius:10px;padding:9px 12px;font-size:11px;margin-bottom:10px}
   #updbanner a{color:var(--cyan);font-weight:700}
   #negrow{margin-top:8px;font-size:11px;font-weight:600;color:var(--green)}
   #heatinfo{font-size:10px;color:var(--dim);margin-top:6px;min-height:14px}
-  #stale{background:rgba(245,179,66,.12);border:1px solid var(--amber);color:var(--amber);
+  #stale{background:var(--wash-amber);border:1px solid var(--amber);color:var(--amber);
     border-radius:10px;padding:9px 12px;font-size:11px;margin-bottom:10px}
   .cost{display:flex;align-items:baseline;font-size:12px;padding:6px 0;
     border-bottom:1px solid var(--line)}
@@ -174,6 +205,26 @@
   .dlg select{width:170px;background:var(--surface2);border:1px solid var(--line);
     color:var(--text);border-radius:8px;padding:7px 6px;font-size:12px}
   #t_pinfo{font-size:9px;color:var(--cyan);margin:-2px 0 8px;line-height:1.4}
+  /* Monatsvergleich */
+  #mstrip{display:flex;gap:5px;margin-bottom:12px}
+  .mb{flex:1;background:var(--surface2);border:1px solid var(--line);border-radius:9px;
+    padding:6px 4px;text-align:center;font-size:9px;color:var(--dim);font-family:inherit}
+  .mb.sel{border-color:var(--blue);color:var(--text)}
+  .mb b{display:block;font-size:11px;font-weight:600;margin-top:2px}
+  #msaldo{text-align:center;padding:2px 0 12px}
+  #msign{font-size:9px;letter-spacing:.05em;color:var(--dim);text-transform:uppercase}
+  #mbig{font-size:38px;font-weight:200;line-height:1.15;margin-top:2px}
+  #msub{font-size:10px;color:var(--dim);margin-top:2px}
+  .mrow{display:flex;align-items:center;gap:8px;font-size:11px;padding:4px 0}
+  .mrow .ml{width:66px;color:var(--dim)}
+  .mrow .bar{flex:1;height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+  .mrow .bar i{display:block;height:100%;border-radius:5px}
+  .mrow .mv{width:64px;text-align:right}
+  #mnetz{font-size:9.5px;color:var(--dim);margin-top:8px;line-height:1.55}
+  #verbfoot{display:flex;align-items:center;gap:8px;margin-top:8px}
+  #csvbtn{flex:none;background:var(--surface2);border:1px solid var(--line);color:var(--dim);
+    border-radius:8px;padding:6px 12px;font-size:10px;font-family:inherit}
+  #csvbtn:active{border-color:var(--cyan);color:var(--cyan)}
   #disclaim{text-align:center;font-size:9px;color:var(--faint);padding:0 10px 4px}
   #disclaim a{color:var(--dim)}
 </style>
@@ -257,6 +308,21 @@
       <span class="note" id="verbn"></span></h2>
   <div id="verbrows"></div>
   <div id="verbsum"></div>
+  <div id="verbfoot"><button id="csvbtn">⬇ Als CSV exportieren</button>
+    <span id="csvnote" style="font-size:9px;color:var(--faint)"></span></div>
+</div>
+
+<div class="card hidden" id="monatCard">
+  <h2><span class="led" style="background:var(--cyan)"></span>Monatsvergleich
+      <span class="note" id="monatn"></span></h2>
+  <div id="mstrip"></div>
+  <div id="msaldo">
+    <div id="msign"></div>
+    <div id="mbig">–</div>
+    <div id="msub"></div>
+  </div>
+  <div id="mbars"></div>
+  <div id="mnetz"></div>
 </div>
 
 <div class="card hidden" id="heatCard">
@@ -291,6 +357,11 @@
 <div id="tarifdlg" class="hidden">
   <div class="dlg">
     <h3>⚙ Mein Tarif</h3>
+    <label>Darstellung<select id="t_theme">
+      <option value="auto">automatisch (wie das Gerät)</option>
+      <option value="light">immer hell</option>
+      <option value="dark">immer dunkel</option>
+    </select></label>
     <label>Anbieter<select id="t_anb"></select></label>
     <label>Netzgebiet<select id="t_reg"></select></label>
     <div id="t_pinfo" class="hidden"></div>
@@ -301,6 +372,10 @@
     <label>Schwelle teuer (ct)<input id="t_teu" inputmode="decimal"></label>
     <label>Ladefenster (Stunden)<input id="t_std" inputmode="numeric"></label>
     <label>Lademenge (kWh)<input id="t_kwh" inputmode="decimal"></label>
+    <label>Vergleich: Fixtarif-Energiepreis (ct/kWh, leer = aus)
+      <input id="t_fix" inputmode="decimal"></label>
+    <label>Fixtarif-Preis ist brutto (inkl. MwSt)
+      <input type="checkbox" id="t_fixbrutto"></label>
     <label>SNAP-Rabatt berücksichtigen (Apr–Sep, 10–16 Uhr)
       <input type="checkbox" id="t_snap"></label>
     <label id="t_notirow" class="hidden">Meldung, wenn das Ladefenster beginnt
@@ -376,8 +451,16 @@ const effAt = (epex, when) =>
 const eff = epex => effAt(epex, null);
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const COL = {};
-for (const n of ["surface","surface2","row","line","text","dim","faint","blue","cyan","green","amber","red"])
-  COL[n] = css("--" + n);
+let LIGHT = false;
+function readCol() {
+  for (const n of ["bg","bg2","surface","surface2","row","line","text","text2","dim","faint",
+                   "blue","cyan","green","amber","red","oncolor","onaccent","nowring","track"])
+    COL[n] = css("--" + n);
+  LIGHT = css("--islight") === "1";
+}
+readCol();
+/* Farbe mit Deckkraft für die Canvas-Flächen — hält sich an die Palette */
+const wash = (col, a) => col + Math.round(255 * a).toString(16).padStart(2, "0");
 
 function mixc(a, b, t) {
   const pa = a.match(/\w\w/g).map(x => parseInt(x, 16));
@@ -415,6 +498,8 @@ let S = null;            // aktueller Auswertungs-Stand
 let HIST = [];           // Tagesstatistiken vom PC-Widget (brutto, fertig)
 let HISTRAW = null;      // Roh-Historie vom Verteiler (Börsenpreise je Tag)
 let VERB = [];           // eigener Verbrauch + Kosten je Tag (nur vom PC-Widget)
+let MONATE = [];         // Monatssummen (Energie/Netz getrennt) vom PC-Widget
+let MSEL = null;         // gewählter Monat, null = neuester mit Daten
 let LASTRAW = null;      // zuletzt geladene Roh-Preisliste
 let sourceName = "—", sourceMode = "—";
 function process() {     // Brutto immer clientseitig aus dem eigenen Tarif rechnen
@@ -469,7 +554,7 @@ async function fetchAwattar() {
   };
 }
 async function loadData() {
-  setStatus(COL.faint, "lädt …");
+  setStatus("faint", "lädt …");
   let payload = null;
   try { payload = await fetchWidget(); sourceMode = "PC-Widget"; }
   catch (e) {
@@ -483,7 +568,7 @@ async function loadData() {
     }
   }
   if (!payload || !payload.prices || !payload.prices.length) {
-    setStatus(COL.red, "offline — keine Daten");
+    setStatus("red", "offline — keine Daten");
     return;
   }
   if (payload.config) {
@@ -502,11 +587,16 @@ async function loadData() {
   }
   if (payload.verbrauch && payload.verbrauch.length) {
     VERB = payload.verbrauch;
-    try { localStorage.gmVerb = JSON.stringify(VERB); } catch (e) {}
+    MONATE = payload.monate || [];
+    try {
+      localStorage.gmVerb = JSON.stringify(VERB);
+      localStorage.gmMonate = JSON.stringify(MONATE);
+    } catch (e) {}
   } else if (sourceMode !== "PC-Widget") {
     try { VERB = JSON.parse(localStorage.gmVerb || "null") || []; } catch (e) { VERB = []; }
+    try { MONATE = JSON.parse(localStorage.gmMonate || "null") || []; } catch (e) { MONATE = []; }
   }
-  renderVerb();
+  renderVerb(); renderMonat();
   try { localStorage.gmData = JSON.stringify(payload); } catch (e) {}
   sourceName = payload.source || "?";
   LASTRAW = payload.prices;
@@ -524,7 +614,7 @@ async function loadData() {
     updateTarifBtn();
   });
   const res = S.pts.length && S.pts[0].res <= 15 ? "15 min" : "stündlich";
-  setStatus(sourceMode === "Cache" ? COL.amber : COL.green,
+  setStatus(sourceMode === "Cache" ? "amber" : "green",
     sourceName + " · " + res);
   $("updated").textContent = "Stand " + hm(new Date());
   const gen = payload.generated ? new Date(payload.generated) : new Date();
@@ -545,8 +635,10 @@ async function loadData() {
     }
   }
 }
-function setStatus(color, txt) {
-  $("statusdot").style.background = color;
+let LASTSTATUS = {key: "faint", txt: "lädt …"};
+function setStatus(key, txt) {
+  LASTSTATUS = {key: key, txt: txt};
+  $("statusdot").style.background = COL[key] || key;
   $("statustxt").textContent = txt;
 }
 
@@ -626,7 +718,7 @@ function renderHero() {
   const a0 = Math.PI * (140 / 180), spanA = Math.PI * (260 / 180);
   ctx.lineCap = "round";
   ctx.beginPath(); ctx.arc(cx, cy, r, a0, a0 + spanA);
-  ctx.strokeStyle = mixc(COL.surface, COL.line, .9); ctx.lineWidth = tw; ctx.stroke();
+  ctx.strokeStyle = COL.track; ctx.lineWidth = tw; ctx.stroke();
   const lo = Math.min(0, S.vmin), hi = Math.max(S.vmax, CFG.price_expensive * 1.15);
   for (const thr of [CFG.price_cheap, CFG.price_expensive]) {
     const f = (thr - lo) / Math.max(.1, hi - lo);
@@ -641,7 +733,7 @@ function renderHero() {
   if (cur) {
     const frac = Math.max(0, Math.min(1, (cur.effective - lo) / Math.max(.1, hi - lo)));
     const steps = 40;
-    const startCol = mixc(col, COL.surface, .45);
+    const startCol = mixc(col, COL.surface, LIGHT ? .25 : .45);
     for (let i = 0; i < steps; i++) {
       const t = i / steps;
       ctx.beginPath();
@@ -660,7 +752,7 @@ function renderHero() {
   }
   const chip = $("ratechip");
   chip.textContent = label; chip.style.color = col; chip.style.borderColor = col;
-  chip.style.background = col + "22";
+  chip.style.background = col + (LIGHT ? "14" : "22");
   const neg = $("negrow");
   if (cur && cur.epex < 0) {
     neg.textContent = "⚡ Börse " + de(cur.epex) + " ct — negativ! Verbrauchen lohnt doppelt";
@@ -765,33 +857,33 @@ function renderChart(selIdx) {
   }
   const bw = S.window;
   if (bw && bw.start < t1 && bw.end > t0) {
-    ctx.fillStyle = "rgba(61,220,151,.10)";
+    ctx.fillStyle = wash(COL.green, LIGHT ? .14 : .10);
     ctx.fillRect(X(Math.max(bw.start, t0)), top,
       X(Math.min(bw.end, t1)) - X(Math.max(bw.start, t0)), ch);
   }
   if (selIdx != null) {
     const p = pts[selIdx];
-    ctx.fillStyle = "rgba(45,212,191,.13)";
+    ctx.fillStyle = wash(COL.cyan, LIGHT ? .16 : .13);
     ctx.fillRect(X(p.start), top, X(slotEnd(p)) - X(p.start), ch);
   }
   ctx.beginPath();
   ctx.moveTo(left, top + ch);
   for (const p of pts) { ctx.lineTo(X(p.start), Y(p.effective)); ctx.lineTo(X(slotEnd(p)), Y(p.effective)); }
   ctx.lineTo(left + cw, top + ch); ctx.closePath();
-  ctx.fillStyle = "rgba(76,141,255,.09)"; ctx.fill();
+  ctx.fillStyle = wash(COL.blue, LIGHT ? .12 : .09); ctx.fill();
   for (let i = 0; i < pts.length; i++) {
     const p = pts[i], y = Y(p.effective), col = priceColor(p.effective);
     ctx.strokeStyle = col; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(X(p.start), y); ctx.lineTo(X(slotEnd(p)), y); ctx.stroke();
     if (i) {
-      ctx.strokeStyle = mixc(col, COL.surface, .35); ctx.lineWidth = 1;
+      ctx.strokeStyle = mixc(col, COL.surface, LIGHT ? .55 : .35); ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(X(p.start), Y(pts[i - 1].effective));
       ctx.lineTo(X(p.start), y); ctx.stroke();
     }
   }
   for (const [thr, col] of [[CFG.price_cheap, COL.green], [CFG.price_expensive, COL.red]]) {
     if (thr > vmn && thr < vmx) {
-      ctx.strokeStyle = mixc(COL.surface, col, .55); ctx.lineWidth = 1;
+      ctx.strokeStyle = mixc(COL.surface, col, LIGHT ? .78 : .55); ctx.lineWidth = 1;
       ctx.setLineDash([4, 4]);
       ctx.beginPath(); ctx.moveTo(left, Y(thr)); ctx.lineTo(left + cw, Y(thr)); ctx.stroke();
       ctx.setLineDash([]);
@@ -909,6 +1001,180 @@ function renderVerb() {
   $("verbsum").style.cssText = "margin-top:8px;font-size:12px;color:var(--dim)";
 }
 
+/* Fixtarif-Energiepreis brutto; 0 = Vergleich aus */
+function fixCt() {
+  const v = parseFloat(CFG.fix_ct);
+  if (!(v > 0)) return 0;
+  return CFG.fix_brutto === false ? v * CFG.mwst : v;
+}
+const MNAME = ["Jänner", "Februar", "März", "April", "Mai", "Juni", "Juli",
+               "August", "September", "Oktober", "November", "Dezember"];
+function monatName(ym) {
+  return MNAME[parseInt(ym.slice(5), 10) - 1] + " " + ym.slice(0, 4);
+}
+function renderMonat() {
+  const card = $("monatCard");
+  if (!MONATE.length) { card.classList.add("hidden"); return; }
+  card.classList.remove("hidden");
+  const ym = MSEL && MONATE.some(m => m.ym === MSEL) ? MSEL
+                                                     : MONATE[MONATE.length - 1].ym;
+  const m = MONATE.find(x => x.ym === ym);
+  const fix = fixCt();
+  // Beim laufenden Monat den Zeitraum benennen — "August" liest sich sonst
+  // wie ein Monatsabschluss, obwohl erst die halbe Zeit vorliegt.
+  const zeitraum = m.laufend
+    ? "1.–" + m.tage_moeglich + ". " + monatName(ym)
+    : monatName(ym);
+  $("monatn").textContent = m.tage_moeglich
+    ? m.tage + " von " + m.tage_moeglich + " Tagen" : m.tage + " Tage";
+
+  $("mstrip").innerHTML = MONATE.slice(-4).map(x =>
+    `<button class="mb${x.ym === ym ? " sel" : ""}" data-ym="${x.ym}">` +
+    `${MNAME[parseInt(x.ym.slice(5), 10) - 1].slice(0, 3)}<b>${de(x.eur, 0)} €</b></button>`
+  ).join("");
+  for (const b of $("mstrip").children)
+    b.addEventListener("click", () => { MSEL = b.dataset.ym; renderMonat(); });
+
+  const grob = m.tage_exakt === 0;              // reine Näherung: keine Cent-Genauigkeit
+  if (!fix) {
+    $("msign").textContent = zeitraum.toUpperCase() + " · GESAMT";
+    $("mbig").textContent = de(m.eur) + " €";
+    $("mbig").style.color = COL.text;
+    $("msub").textContent = de(m.kwh, 1) + " kWh · Energie " + de(m.ct_dyn) + " ct/kWh";
+    $("mbars").innerHTML = "";
+    $("mnetz").innerHTML = "Für den Vergleich mit einem Fixtarif dessen Energiepreis " +
+      'unter „⚙ Mein Tarif" eintragen. Dann steht hier, ob sich der dynamische Tarif ' +
+      "in diesem Monat gelohnt hat.";
+    return;
+  }
+  const eurFix = m.kwh * fix / 100, delta = eurFix - m.eur_energie;
+  const neutral = Math.abs(delta) < 0.5;
+  const col = neutral ? COL.dim : (delta >= 0 ? COL.green : COL.red);
+  $("msign").textContent = zeitraum.toUpperCase() + " · " +
+    (neutral ? "PRAKTISCH GLEICH WIE FIXTARIF"
+             : delta >= 0 ? "GESPART GEGENÜBER FIXTARIF" : "DRAUFGEZAHLT GEGENÜBER FIXTARIF");
+  $("mbig").textContent = (grob ? "≈ " : "") + (delta >= 0 ? "+" : "−") +
+    de(Math.abs(delta), grob ? 0 : 2) + " €";
+  $("mbig").style.color = col;
+  $("msub").textContent = "dynamisch " + de(m.ct_dyn) + " ct gegen fix " + de(fix) +
+    " ct/kWh · " + de(m.kwh, 1) + " kWh";
+  const mx = Math.max(m.eur_energie, eurFix, .01);
+  $("mbars").innerHTML =
+    [["dynamisch", m.eur_energie, COL.blue], ["Fixtarif", eurFix, COL.faint]].map(
+      ([l, v, c]) => `<div class="mrow"><span class="ml">${l}</span>` +
+        `<span class="bar"><i style="width:${Math.max(3, v / mx * 100)}%;background:${c}"></i></span>` +
+        `<span class="mv">${de(v)} €</span></div>`).join("");
+  let hinweis = "Verglichen wird nur der <b>Energieanteil</b>. Das Netzentgelt (" +
+    de(m.netz_eur) + " € in diesem Zeitraum) zahlst du in beiden Tarifen gleich — auch " +
+    "der SNAP-Rabatt gehört dem Netz, nicht dem Tarif.";
+  if (grob) {
+    hinweis += "<br><b>Schätzung:</b> Ohne Viertelstundenwerte wird jede kWh mit dem " +
+      "Tagesdurchschnitt bewertet. Wie hoch der Betrag wirklich ist, hängt davon ab, zu " +
+      "welchen Uhrzeiten du verbraucht hast — deshalb steht hier eine gerundete Zahl.";
+    if (m.anteil_unter_fix != null)
+      hinweis += " Die Richtung ist trotzdem belastbar: Der Börsenpreis lag in diesem " +
+        "Zeitraum nur " + de(m.anteil_unter_fix, 0) + " % der Zeit unter deinem Fixtarif.";
+  }
+  $("mnetz").innerHTML = hinweis;
+}
+
+/* CSV für österreichisches Excel: Semikolon, Dezimalkomma, UTF-8 mit BOM, CRLF */
+function buildCSV(tage) {
+  const q = s => /[";\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  const zeilen = [["Datum", "Wochentag", "Verbrauch (kWh)", "Kosten gesamt (EUR)",
+                   "davon Energie (EUR)", "davon Netzentgelt (EUR)",
+                   "Durchschnittspreis (ct/kWh)", "Genauigkeit"]];
+  const r2 = v => Math.round(v * 100) / 100;
+  let sk = 0, se = 0, sn = 0, sz = 0;
+  for (const d of tage) {
+    const kwh = +d.kwh || 0, eur = +d.eur || 0;
+    const dt2 = new Date((d.date || "") + "T12:00:00");
+    const hatTeile = d.energie != null && d.netz != null;
+    sk += Math.round(kwh * 1000) / 1000; se += r2(eur);
+    if (hatTeile) { sz += r2(+d.energie); sn += r2(+d.netz); }
+    zeilen.push([
+      isNaN(dt2) ? String(d.date || "") :
+        dt2.toLocaleDateString("de-AT", {day: "2-digit", month: "2-digit", year: "numeric"}),
+      isNaN(dt2) ? "" : dt2.toLocaleDateString("de-AT", {weekday: "long"}),
+      de(kwh, 3), de(eur),
+      hatTeile ? de(+d.energie) : "", hatTeile ? de(+d.netz) : "",
+      kwh > 0 ? de(eur / kwh * 100) : "", d.exact ? "exakt" : "geschätzt"]);
+  }
+  zeilen.push(["Summe", "", de(sk, 3), de(se),
+               sz ? de(sz) : "", sn ? de(sn) : "", "", ""]);
+  return "\ufeff" + zeilen.map(z => z.map(q).join(";")).join("\r\n") + "\r\n";
+}
+function copyFallback(text) {          // muss direkt an der Tippgeste hängen
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+  document.body.appendChild(ta);
+  ta.select(); ta.setSelectionRange(0, text.length);
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch (e) {}
+  ta.remove();
+  return ok;
+}
+async function exportCSV() {
+  const note = t => { $("csvnote").textContent = t; };
+  try {
+    if (!VERB.length) { note("keine Daten"); return; }
+    const csv = buildCSV(VERB);
+    const name = "Stromkosten_" + VERB[0].date + "_bis_" +
+                 VERB[VERB.length - 1].date + ".csv";
+    // Tabulator statt Semikolon: fällt beim Einfügen in Excel gleich in Spalten
+    const tab = csv.replace(/^\ufeff/, "").replace(/;/g, "\t");
+
+    // 1) Android-App mit Speicher-Brücke
+    if (window.AndroidBridge && typeof AndroidBridge.saveCsv === "function") {
+      try {
+        const wo = AndroidBridge.saveCsv(name, csv);
+        if (wo) { note("gespeichert: " + wo); return; }
+      } catch (e) {}
+    }
+    // 2) echter Browser mit Download-Fähigkeit
+    if ("download" in document.createElement("a") &&
+        typeof URL !== "undefined" && typeof URL.createObjectURL === "function" &&
+        location.protocol !== "file:") {
+      try {
+        const url = URL.createObjectURL(new Blob([csv], {type: "text/csv;charset=utf-8"}));
+        const a = document.createElement("a");
+        a.href = url; a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        note("Download gestartet — kommt nichts an, nochmal tippen");
+        return;
+      } catch (e) {}
+    }
+    // 3) App ohne Brücke: der PC legt die Datei ab (mit Zeitlimit!)
+    const base = serverBase();
+    if (base) {
+      note("speichert …");
+      const ctl = new AbortController();
+      const timer = setTimeout(() => ctl.abort(), 4000);
+      try {
+        const r = await fetch(base + "/api/csv", {method: "POST", body: csv,
+          signal: ctl.signal, headers: {"Content-Type": "text/plain;charset=UTF-8"}});
+        if (r.ok) { note("am PC gespeichert: " + (await r.json()).name); return; }
+      } catch (e) {
+      } finally { clearTimeout(timer); }
+    }
+    // 4) Zwischenablage
+    try {
+      if (window.isSecureContext && navigator.clipboard) {
+        await navigator.clipboard.writeText(tab);
+        note("in die Zwischenablage kopiert");
+        return;
+      }
+    } catch (e) {}
+    note(copyFallback(tab) ? "in die Zwischenablage kopiert"
+                           : "Export hier nicht möglich");
+  } catch (e) {
+    note("Export fehlgeschlagen");
+  }
+}
+
 function renderSlots() {
   const up = S.future.filter(p => !S.cur || p.start > S.cur.start).slice(0, 12);
   if (!up.length) { $("slots").innerHTML = '<div class="leer">keine Daten</div>'; return; }
@@ -936,7 +1202,13 @@ function renderSlots() {
 /* ==================== Preisbestandteile ==================== */
 function renderParts() {
   const cur = S.cur;
-  if (!cur) return;
+  if (!cur) {                      // sonst bleiben nach einem Themenwechsel
+    $("stack").innerHTML = "";     // Farben der anderen Palette stehen
+    $("parts").innerHTML = "";
+    $("ptotalv").textContent = "–";
+    $("ptotalv").style.color = "";
+    return;
+  }
   const energie = cur.epex + CFG.aufschlag_ct;
   const netzNow = netzAt(cur.start);
   const snapAktiv = netzNow < CFG.netzentgelt_ct - 0.001;
@@ -1035,7 +1307,7 @@ function renderHist() {
   ctx.beginPath();
   days.forEach((d, i) => ctx.lineTo(X(i), Y(d.mx)));
   for (let i = days.length - 1; i >= 0; i--) ctx.lineTo(X(i), Y(days[i].mn));
-  ctx.closePath(); ctx.fillStyle = "rgba(76,141,255,.10)"; ctx.fill();
+  ctx.closePath(); ctx.fillStyle = wash(COL.blue, LIGHT ? .13 : .10); ctx.fill();
   ctx.strokeStyle = COL.green; ctx.lineWidth = 1.5;
   ctx.beginPath(); days.forEach((d, i) => ctx.lineTo(X(i), Y(d.wavg))); ctx.stroke();
   ctx.strokeStyle = COL.blue; ctx.lineWidth = 2;
@@ -1179,12 +1451,12 @@ function renderArch(sel) {
   }
   const bw = bestWindow(slots, CFG.best_window_hours);
   if (bw) {
-    ctx.fillStyle = "rgba(61,220,151,.10)";
+    ctx.fillStyle = wash(COL.green, LIGHT ? .14 : .10);
     ctx.fillRect(X(bw.start), top, X(bw.end) - X(bw.start), ch);
   }
   if (sel != null) {
     const p = slots[sel];
-    ctx.fillStyle = "rgba(45,212,191,.13)";
+    ctx.fillStyle = wash(COL.cyan, LIGHT ? .16 : .13);
     ctx.fillRect(X(p.start), top, X(slotEnd(p)) - X(p.start), ch);
   }
   for (let i = 0; i < slots.length; i++) {
@@ -1241,8 +1513,40 @@ $("arch").addEventListener("mouseleave", () => renderArch(null));
 function renderAll() {
   renderHero(); renderWindow(); renderChart(null); updateTipbar(null);
   renderRaster(); renderSlots(); renderParts(); renderCosts(); renderHist();
-  renderHeat(); renderArch(null);
+  renderHeat(); renderArch(null); renderVerb(); renderMonat();
 }
+/* ============================ Hell / Dunkel ============================ */
+function themeMode() {
+  try {
+    const t = localStorage.gmTheme;
+    return (t === "light" || t === "dark") ? t : "auto";
+  } catch (e) { return "auto"; }   // Speicher gesperrt (privater Modus)
+}
+function applyTheme(mode) {
+  if (mode) {
+    try {
+      if (mode === "auto") delete localStorage.gmTheme;
+      else localStorage.gmTheme = mode;
+    } catch (e) {}
+  }
+  const m = themeMode();
+  if (m === "auto") delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = m;
+  readCol();
+  for (const el of document.querySelectorAll('meta[name="theme-color"]')) el.remove();
+  const meta = document.createElement("meta");
+  meta.name = "theme-color";
+  meta.content = COL.bg;
+  document.head.appendChild(meta);
+  if (window.AndroidBridge && AndroidBridge.setChrome) {     // Statusleiste der App
+    try { AndroidBridge.setChrome(COL.bg, LIGHT); } catch (e) {}
+  }
+  setStatus(LASTSTATUS.key, LASTSTATUS.txt);
+  if (S) renderAll(); else { renderVerb(); renderMonat(); }
+}
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+  if (themeMode() === "auto") applyTheme();
+});
 const pn = (v, lo, hi, fb) => {
   const x = parseFloat(String(v).replace(",", "."));
   return isNaN(x) ? fb : Math.max(lo, Math.min(hi, x));
@@ -1303,6 +1607,9 @@ function openTarif() {
   $("t_noti").checked = CFG.notify_window !== false;
   $("t_alarmrow").classList.toggle("hidden", !window.AndroidBridge);
   $("t_alarm").value = CFG.alarm_ct > 0 ? de(CFG.alarm_ct, 0) : "";
+  $("t_theme").value = themeMode();
+  $("t_fix").value = CFG.fix_ct > 0 ? de(CFG.fix_ct) : "";
+  $("t_fixbrutto").checked = CFG.fix_brutto !== false;
   $("t_pcrow").classList.toggle("hidden", location.protocol !== "file:");
   $("t_pc").value = (localStorage.gmServer || "")
     .replace(/^https?:\/\//, "").replace(/:8480$/, "");
@@ -1332,6 +1639,7 @@ $("t_cancel").addEventListener("click", () => $("tarifdlg").classList.add("hidde
 $("tarifdlg").addEventListener("click", e => {
   if (e.target === $("tarifdlg")) $("tarifdlg").classList.add("hidden");
 });
+$("t_theme").addEventListener("change", e => applyTheme(e.target.value));
 $("t_save").addEventListener("click", () => {
   const t = {
     aufschlag_ct: pn($("t_auf").value, -10, 50, DEFAULTS.aufschlag_ct),
@@ -1346,6 +1654,8 @@ $("t_save").addEventListener("click", () => {
   t.notify_window = $("t_noti").checked;
   t.snap = $("t_snap").checked;
   t.alarm_ct = $("t_alarm").value.trim() === "" ? 0 : pn($("t_alarm").value, 0, 100, 0);
+  t.fix_ct = $("t_fix").value.trim() === "" ? 0 : pn($("t_fix").value, 0, 100, 0);
+  t.fix_brutto = $("t_fixbrutto").checked;
   if (regComp) {
     t.netz_ap_ct = regComp.ap;
     t.netz_verlust_ct = regComp.vl;
@@ -1368,10 +1678,12 @@ $("t_save").addEventListener("click", () => {
   }
   rebuildCfg();
   process();
+  renderMonat();
   updateTarifBtn();
   $("tarifdlg").classList.add("hidden");
 });
 if (location.hash === "#tarif") setTimeout(() => { loadPresets().then(openTarif); }, 600);
+$("csvbtn").addEventListener("click", exportCSV);
 $("reload").addEventListener("click", loadData);
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) loadData();
@@ -1399,6 +1711,7 @@ checkUpdate();
 if ("serviceWorker" in navigator && location.protocol === "https:") {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
+try { applyTheme(); } catch (e) {}
 setInterval(tickCountdown, 1000);
 setInterval(loadData, 10 * 60 * 1000);
 loadData();

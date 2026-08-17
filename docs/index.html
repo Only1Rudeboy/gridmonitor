@@ -189,6 +189,13 @@ if(_t==="light"||_t==="dark")document.documentElement.dataset.theme=_t;}catch(e)
   #attrib{text-align:center;font-size:9px;color:var(--faint);padding:2px 10px 8px}
   #updbanner{background:var(--wash-cyan);border:1px solid var(--cyan);color:var(--cyan);
     border-radius:10px;padding:9px 12px;font-size:11px;margin-bottom:10px}
+  #updbanner button{background:var(--cyan);color:var(--onaccent);border:none;
+    border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;
+    font-family:inherit;margin-left:8px}
+  #updbar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;
+    margin-top:8px}
+  #updbar i{display:block;height:100%;width:0;background:var(--cyan);border-radius:3px;
+    transition:width .3s}
   #updbanner a{color:var(--cyan);font-weight:700}
   #negrow{margin-top:8px;font-size:11px;font-weight:600;color:var(--green)}
   #heatinfo{font-size:10px;color:var(--dim);margin-top:6px;min-height:14px}
@@ -357,6 +364,10 @@ if(_t==="light"||_t==="dark")document.documentElement.dataset.theme=_t;}catch(e)
   <button id="reload" class="abtn"><span class="bicon">⟳</span>
     <span><b>Aktualisieren</b><small id="updated">–</small></span></button>
 </footer>
+<div id="verrow">
+  <button id="updbtn">🔄 Auf Updates prüfen</button>
+  <span id="updinfo"></span>
+</div>
 <div id="attrib"></div>
 <div id="disclaim"></div>
 <div id="sponsor">Unterstützt von OSMOVOLTAIK e.U.</div>
@@ -398,10 +409,6 @@ if(_t==="light"||_t==="dark")document.documentElement.dataset.theme=_t;}catch(e)
     Aufschlag und Netzentgelt stehen auf deiner Stromrechnung
     (VKW Strom dynamisch: 1,20 · Netz je nach Region).</p>
   </div>
-</div>
-<div id="verrow">
-  <button id="updbtn">🔄 Auf Updates prüfen</button>
-  <span id="updinfo"></span>
 </div>
 <div id="apkrow" class="hidden" style="text-align:center;padding:6px 0 10px">
   <a id="apklink" href="/app.apk" style="color:var(--cyan);font-size:12px;
@@ -1733,12 +1740,56 @@ async function neuesteVersion() {
   const j = await r.json();
   return {tag: (j.tag_name || "").replace(/^v/, ""), seite: j.html_url || ""};
 }
-function zeigeBanner(neu) {
-  $("updbanner").innerHTML = "📲 Version " + neu + " ist da — " +
-    '<a href="#" id="updlink">jetzt herunterladen</a>';
-  $("updbanner").classList.remove("hidden");
-  $("updlink").addEventListener("click", e => { e.preventDefault(); oeffne(APK_URL); });
+function kannSelbstInstallieren() {
+  try {
+    return !!(window.AndroidBridge && typeof AndroidBridge.installUpdate === "function");
+  } catch (e) { return false; }
 }
+function zeigeBanner(neu) {
+  const selbst = kannSelbstInstallieren();
+  $("updbanner").innerHTML =
+    '<div id="updtext">📲 <b>Version ' + neu + '</b> ist da' +
+    (selbst ? "" : " — im Browser herunterladen") + "</div>" +
+    '<button id="updlink">' + (selbst ? "Aktualisieren" : "Herunterladen") + "</button>" +
+    '<div id="updbar" class="hidden"><i></i></div>';
+  $("updbanner").classList.remove("hidden");
+  $("updlink").addEventListener("click", () => {
+    if (selbst) {
+      $("updlink").disabled = true;
+      $("updtext").textContent = "⏳ Version " + neu + " wird geladen …";
+      $("updbar").classList.remove("hidden");
+      try { AndroidBridge.installUpdate(APK_URL); }
+      catch (e) { gmUpdate("fehler", "Brücke antwortet nicht"); }
+    } else {
+      oeffne(APK_URL);
+    }
+  });
+}
+/* Rückmeldungen der App während Herunterladen und Installieren */
+window.gmUpdate = function (zustand, text) {
+  const t = $("updtext"), bar = $("updbar"), b = $("updlink");
+  if (!t) return;
+  if (zustand === "fortschritt") {
+    const p = Math.max(0, Math.min(100, parseInt(text, 10) || 0));
+    if (bar) { bar.classList.remove("hidden"); bar.firstElementChild.style.width = p + "%"; }
+    t.textContent = "⏳ wird geladen … " + p + " %";
+  } else if (zustand === "start") {
+    t.textContent = "⏳ Download gestartet …";
+  } else if (zustand === "erlaubnis") {
+    t.innerHTML = "🔐 Bitte einmalig erlauben, dass Grid Monitor Apps installieren darf — " +
+      "danach geht es von selbst weiter.";
+  } else if (zustand === "installation") {
+    if (bar) bar.classList.add("hidden");
+    t.textContent = "✅ Heruntergeladen — die Installation wird jetzt angeboten.";
+    if (b) b.classList.add("hidden");
+  } else if (zustand === "fehler") {
+    if (bar) bar.classList.add("hidden");
+    t.textContent = "⚠ Hat nicht geklappt" + (text ? " (" + text + ")" : "") +
+      " — im Browser herunterladen";
+    if (b) { b.disabled = false; b.textContent = "Im Browser öffnen"; }
+    if (b) b.onclick = () => oeffne(APK_URL);
+  }
+};
 async function checkUpdate(manuell) {
   const info = t => { $("updinfo").textContent = t; };
   const mine = appVersion();

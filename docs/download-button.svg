@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="64" viewBox="0 0 320 64" role="img"
+     aria-label="APK herunterladen — Grid Monitor für Android">
+  <defs>
+    <linearGradient id="btn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#6BA2FF"/>
+      <stop offset="1" stop-color="#2F6FE4"/>
+    </linearGradient>
+    <linearGradient id="bolt" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFE08A"/>
+      <stop offset="1" stop-color="#F5B342"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="1" y="1" width="318" height="62" rx="16" fill="url(#btn)"/>
+  <rect x="1" y="1" width="318" height="62" rx="16" fill="none" stroke="#A9C6FF" stroke-opacity=".55"/>
+
+  <!-- Blitz im Kreis: dieselbe Marke wie in der App -->
+  <g transform="translate(24, 14)">
+    <circle cx="18" cy="18" r="17" fill="#0B1220" fill-opacity=".28" stroke="#DCE8FF"
+            stroke-opacity=".7" stroke-width="2"/>
+    <path d="M20.5 7 L11.5 20 h6 l-2 11 9-13 h-6 z" fill="url(#bolt)"/>
+  </g>
+
+  <text x="74" y="29" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif"
+        font-size="17" font-weight="700" fill="#07142B">APK herunterladen</text>
+  <text x="74" y="47" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif"
+        font-size="12" fill="#08214A" fill-opacity=".85">Grid Monitor für Android</text>
+</svg>

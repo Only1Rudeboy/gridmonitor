@@ -60,24 +60,40 @@ günstigsten?** — **Und was hat mich das am Monatsende wirklich gekostet?**
 ## 💶 Wie der Preis gerechnet wird
 
 ```
-brutto = (Börsenpreis + Aufschlag) × MwSt + Netzentgelt
+brutto = (Börsenpreis + Aufschlag) × MwSt + Netzentgelt + Abgaben
 ```
 
-Die Mehrwertsteuer fällt **nur auf den Energieanteil** an; das Netzentgelt kommt danach
-unversteuert dazu. Beispiel VKW Strom dynamisch in Vorarlberg:
+Die Umsatzsteuer fällt auf **alles** an. In der Formel wird sie nur auf den Energieanteil
+gerechnet, weil Netzentgelt und Abgaben bereits als **Bruttowerte** eingetragen werden —
+so, wie sie in den Presets hinterlegt sind. Beispiel VKW Strom dynamisch in Vorarlberg,
+Netzebene 7 („nicht gemessene Leistung", der Normalfall im Haushalt):
 
-| Bestandteil | Wert |
+| Bestandteil | netto |
 |---|---|
-| Börsenpreis (EPEX Spot AT, viertelstündlich) | z. B. 14,06 ct |
-| \+ Aufschlag laut Vertrag | 1,20 ct |
-| × MwSt 20 % **nur auf diese Summe** | ×1,20 |
-| \+ Netzentgelt (regional, brutto) | 4,36 ct |
-| **= Endpreis** | **22,71 ct/kWh** |
+| Börsenpreis (EPEX Spot AT, viertelstündlich) | 14,060 ct |
+| \+ Aufschlag laut Vertrag | 1,200 ct |
+| \+ Netznutzungsentgelt Arbeitspreis | 4,960 ct |
+| \+ Netzverlustentgelt | 0,393 ct |
+| \+ Erneuerbaren-Förderbeitrag (0,583 + 0,037) | 0,620 ct |
+| \+ Elektrizitätsabgabe (Haushalt, 2026 gesenkt) | 0,100 ct |
+| **Summe netto** | **21,333 ct** |
+| **\+ 20 % USt = Endpreis** | **25,60 ct/kWh** |
+
+In der App entspricht das: Netzentgelt **6,42 ct** brutto (4,960 + 0,393, mal 1,2) und
+Abgaben **0,86 ct** brutto.
+
+**Nicht im Preis pro kWh enthalten**, weil sie nicht am Verbrauch hängen: der Netz-Grundpreis
+von 54,00 €/Jahr netto (bundesweit einheitlich), das Messentgelt (rund 0,60–2,60 €/Monat
+netto je nach Zähler), die Erneuerbaren-Förderpauschale von 19,02 €/Jahr netto sowie die
+Grundgebühr deines Lieferanten.
 
 **SNAP (Sommer-Nieder-Arbeitspreis):** Von 1. April bis 30. September gilt täglich von
-10 bis 16 Uhr ein um 20 % verringertes **Netz**-Arbeitsentgelt. Das ist gesetzlich
-geregelt und gilt **tarifunabhängig** — auch für dynamische Tarife. Die App rechnet es
-zeitgenau mit, wahlweise mit den amtlichen Werten deines Netzgebiets oder als Näherung.
+10 bis 16 Uhr ein verringerter **Netz**-Arbeitspreis. Die Verordnung gibt dafür eigene
+Werte vor (in Vorarlberg 3,97 statt 4,96 ct netto — das sind zwar genau 80 %, aber als
+Tabellenwert, nicht als Rechenregel). Rabattiert wird nur das Netznutzungsentgelt, nicht
+das Verlustentgelt. Der SNAP gilt **tarifunabhängig**, setzt aber viertelstündlich
+gemessene und vom Netzbetreiber ausgelesene Werte voraus; Mengen in einer
+Energiegemeinschaft sind ausgenommen. Die App rechnet ihn zeitgenau mit.
 
 ## 📊 Monatsvergleich gegen einen Fixtarif
 
@@ -149,8 +165,12 @@ aktualisierbar. Alle Angaben ohne Gewähr; bitte mit der eigenen Stromrechnung a
 
 ## 📖 Quellen
 
-- **Netzentgelte:** [SNE-V Novelle 2026, BGBl. II Nr. 305/2025](https://www.ris.bka.gv.at/eli/bgbl/II/2025/305)
-  (amtlich; Netzebene 7, Arbeitspreis „nicht gemessene Leistung" + Netzverlustentgelt, zzgl. 20 % USt)
+- **Netzentgelte:** [SNE-V 2018 – Novelle 2026, BGBl. II Nr. 305/2025](https://www.ris.bka.gv.at/eli/bgbl/II/2025/305)
+  — § 5 Abs. 1 Z 6 (Arbeitspreis und SNAP je Netzgebiet) und § 6 lit. b (Netzverlustentgelt).
+  Alle 14 Netzgebiete am 17.08.2026 gegen den Verordnungstext und die Preisblätter der
+  Netzbetreiber geprüft; letzte Änderung der Verordnung ist 305/2025.
+- **Abgaben je kWh:** Erneuerbaren-Förderbeitragsverordnung 2026 (0,583 + 0,037 ct netto) ·
+  [Elektrizitätsabgabe, für Haushalte 2026 auf 0,10 ct gesenkt](https://www.ris.bka.gv.at/eli/bgbl/I/2025/95)
 - **SNAP-Rabatt (Netz, Apr–Sep 10–16 Uhr):** [BGBl. II Nr. 305/2025, § 5 Abs. 1b](https://www.ris.bka.gv.at/eli/bgbl/II/2025/305)
   · Bestätigung u. a. [Vorarlberg Netz](https://www.vorarlbergnetz.at/SNAP.htm), [IKB](https://www.ikb.at/energie/smart-meter/sommer-nieder-arbeitspreis)
 - **Preisdaten:** [ENTSO-E Transparency](https://transparency.entsoe.eu) ·

@@ -1,182 +1,187 @@
 {
- "stand": "2026-08-10",
- "hinweis": "Alle Angaben ohne Gewähr — bitte mit der eigenen Stromrechnung abgleichen.",
- "netz_hinweis": "Netz-Arbeitspreis + Netzverlustentgelt, Netzebene 7 (Haushalt, nicht gemessene Leistung), brutto inkl. 20 % USt. Gültig ab 1.1.2026 laut SNE-V Novelle 2026.",
- "quellen": [
-  {
-   "name": "SNE-V Novelle 2026 — BGBl. II Nr. 305/2025 (amtlich)",
-   "url": "https://www.ris.bka.gv.at/eli/bgbl/II/2025/305"
-  },
-  {
-   "name": "aWATTAR Tarif HOURLY (Anbieterseite)",
-   "url": "https://www.awattar.at/tariffs/hourly"
-  },
-  {
-   "name": "Smart Meter Portal — Anbietervergleich dynamische Tarife (06/2026)",
-   "url": "https://www.smartmeter-portal.at/dynamischer-stromtarif/anbieter-vergleich/"
-  },
-  {
-   "name": "Selectra — Verbund Tarife 2026",
-   "url": "https://selectra.at/strom/anbieter/verbund/tarife"
-  }
- ],
- "anbieter": [
-  {
-   "id": "vkw",
-   "name": "VKW Strom Dynamisch",
-   "aufschlag_ct": 1.2,
-   "info": "15-Minuten-Abrechnung · Vorarlberg"
-  },
-  {
-   "id": "awattar",
-   "name": "aWATTAR HOURLY",
-   "aufschlag_ct": 1.5,
-   "info": "stündlich · österreichweit · + 5,75 € Grundgebühr/Monat"
-  },
-  {
-   "id": "smartenergy",
-   "name": "smartENERGY smartCONTROL",
-   "aufschlag_ct": 1.44,
-   "info": "stündlich · österreichweit"
-  },
-  {
-   "id": "verbund",
-   "name": "Verbund HOURLY",
-   "aufschlag_ct": 1.4,
-   "info": "stündlich · ca.-Wert, exakter Aufschlag steht erst im Angebot"
-  },
-  {
-   "id": "oekostrom",
-   "name": "oekostrom oeko Spot+",
-   "aufschlag_ct": null,
-   "info": "Aufschlag bitte laut eigenem Vertrag eintragen"
-  },
-  {
-   "id": "salzburgag",
-   "name": "Salzburg AG FlexSpot",
-   "aufschlag_ct": null,
-   "info": "Aufschlag bitte laut eigenem Vertrag eintragen"
-  },
-  {
-   "id": "energieag",
-   "name": "Energie AG (dynamisch)",
-   "aufschlag_ct": null,
-   "info": "Aufschlag bitte laut eigenem Vertrag eintragen"
-  }
- ],
- "netz": [
-  {
-   "id": "burgenland",
-   "name": "Burgenland",
-   "netz_ct": 10.15,
-   "netz_ap_ct": 8.46,
-   "netz_verlust_ct": 0.0,
-   "snap_ap_ct": 6.77
-  },
-  {
-   "id": "kaernten",
-   "name": "Kärnten",
-   "netz_ct": 12.05,
-   "netz_ap_ct": 9.67,
-   "netz_verlust_ct": 0.368,
-   "snap_ap_ct": 7.74
-  },
-  {
-   "id": "klagenfurt",
-   "name": "Klagenfurt",
-   "netz_ct": 8.97,
-   "netz_ap_ct": 6.9,
-   "netz_verlust_ct": 0.578,
-   "snap_ap_ct": 5.52
-  },
-  {
-   "id": "niederoesterreich",
-   "name": "Niederösterreich",
-   "netz_ct": 11.01,
-   "netz_ap_ct": 8.79,
-   "netz_verlust_ct": 0.384,
-   "snap_ap_ct": 7.03
-  },
-  {
-   "id": "oberoesterreich",
-   "name": "Oberösterreich",
-   "netz_ct": 8.18,
-   "netz_ap_ct": 6.29,
-   "netz_verlust_ct": 0.528,
-   "snap_ap_ct": 5.03
-  },
-  {
-   "id": "linz",
-   "name": "Linz",
-   "netz_ct": 7.27,
-   "netz_ap_ct": 5.57,
-   "netz_verlust_ct": 0.487,
-   "snap_ap_ct": 4.46
-  },
-  {
-   "id": "salzburg",
-   "name": "Salzburg",
-   "netz_ct": 8.34,
-   "netz_ap_ct": 6.59,
-   "netz_verlust_ct": 0.357,
-   "snap_ap_ct": 5.27
-  },
-  {
-   "id": "steiermark",
-   "name": "Steiermark",
-   "netz_ct": 10.99,
-   "netz_ap_ct": 8.82,
-   "netz_verlust_ct": 0.336,
-   "snap_ap_ct": 7.06
-  },
-  {
-   "id": "graz",
-   "name": "Graz",
-   "netz_ct": 6.99,
-   "netz_ap_ct": 5.17,
-   "netz_verlust_ct": 0.658,
-   "snap_ap_ct": 4.14
-  },
-  {
-   "id": "tirol",
-   "name": "Tirol",
-   "netz_ct": 8.52,
-   "netz_ap_ct": 6.81,
-   "netz_verlust_ct": 0.293,
-   "snap_ap_ct": 5.45
-  },
-  {
-   "id": "innsbruck",
-   "name": "Innsbruck",
-   "netz_ct": 10.18,
-   "netz_ap_ct": 8.03,
-   "netz_verlust_ct": 0.453,
-   "snap_ap_ct": 6.42
-  },
-  {
-   "id": "vorarlberg",
-   "name": "Vorarlberg",
-   "netz_ct": 6.42,
-   "netz_ap_ct": 4.96,
-   "netz_verlust_ct": 0.393,
-   "snap_ap_ct": 3.97
-  },
-  {
-   "id": "wien",
-   "name": "Wien",
-   "netz_ct": 9.22,
-   "netz_ap_ct": 6.98,
-   "netz_verlust_ct": 0.7,
-   "snap_ap_ct": 5.58
-  },
-  {
-   "id": "kleinwalsertal",
-   "name": "Kleinwalsertal",
-   "netz_ct": 21.76,
-   "netz_ap_ct": 17.73,
-   "netz_verlust_ct": 0.401,
-   "snap_ap_ct": 14.18
-  }
- ],
- "snap_hinweis": "SNAP (Sommer-Nieder-Arbeitspreis): 1. April – 30. September, täglich 10–16 Uhr, 20 % Rabatt auf den Netz-Arbeitspreis (nicht auf das Verlustentgelt). Gilt automatisch bei aktiver Viertelstundenmessung; ausgenommen sind Mengen in Energiegemeinschaften. Quelle: BGBl. II Nr. 305/2025, § 5 Abs. 1b."
+  "stand": "2026-08-17",
+  "hinweis": "Alle Angaben ohne Gewähr — bitte mit der eigenen Stromrechnung abgleichen.",
+  "netz_hinweis": "Netz-Arbeitspreis + Netzverlustentgelt, Netzebene 7 (Haushalt, „nicht gemessene Leistung“, Eintarif). Die Einzelwerte netz_ap_ct, netz_verlust_ct und snap_ap_ct sind NETTO laut Verordnung; netz_ct ist die Summe brutto inkl. 20 % USt. Gültig ab 1.1.2026 laut SNE-V 2018 – Novelle 2026 (BGBl. II Nr. 305/2025), § 5 Abs. 1 Z 6 und § 6 lit. b.",
+  "quellen": [
+    "SNE-V 2018 – Novelle 2026, BGBl. II Nr. 305/2025 (Netzentgelte, § 5 Abs. 1 Z 6 und § 6 lit. b)",
+    "Erneuerbaren-Förderbeitragsverordnung 2026 (Förderbeitrag je kWh)",
+    "Elektrizitätsabgabegesetz idF BGBl. I Nr. 95/2025 (Senkung für Haushalte 2026)",
+    {
+      "name": "aWATTAR Tarif HOURLY (Anbieterseite)",
+      "url": "https://www.awattar.at/tariffs/hourly"
+    },
+    {
+      "name": "Smart Meter Portal — Anbietervergleich dynamische Tarife (06/2026)",
+      "url": "https://www.smartmeter-portal.at/dynamischer-stromtarif/anbieter-vergleich/"
+    },
+    {
+      "name": "Selectra — Verbund Tarife 2026",
+      "url": "https://selectra.at/strom/anbieter/verbund/tarife"
+    }
+  ],
+  "anbieter": [
+    {
+      "id": "vkw",
+      "name": "VKW Strom Dynamisch",
+      "aufschlag_ct": 1.2,
+      "info": "15-Minuten-Abrechnung · Vorarlberg"
+    },
+    {
+      "id": "awattar",
+      "name": "aWATTAR HOURLY",
+      "aufschlag_ct": 1.5,
+      "info": "stündlich · österreichweit · + 5,75 € Grundgebühr/Monat"
+    },
+    {
+      "id": "smartenergy",
+      "name": "smartENERGY smartCONTROL",
+      "aufschlag_ct": 1.44,
+      "info": "stündlich · österreichweit"
+    },
+    {
+      "id": "verbund",
+      "name": "Verbund HOURLY",
+      "aufschlag_ct": 1.4,
+      "info": "stündlich · ca.-Wert, exakter Aufschlag steht erst im Angebot"
+    },
+    {
+      "id": "oekostrom",
+      "name": "oekostrom oeko Spot+",
+      "aufschlag_ct": null,
+      "info": "Aufschlag bitte laut eigenem Vertrag eintragen"
+    },
+    {
+      "id": "salzburgag",
+      "name": "Salzburg AG FlexSpot",
+      "aufschlag_ct": null,
+      "info": "Aufschlag bitte laut eigenem Vertrag eintragen"
+    },
+    {
+      "id": "energieag",
+      "name": "Energie AG (dynamisch)",
+      "aufschlag_ct": null,
+      "info": "Aufschlag bitte laut eigenem Vertrag eintragen"
+    }
+  ],
+  "netz": [
+    {
+      "id": "burgenland",
+      "name": "Burgenland",
+      "netz_ct": 10.15,
+      "netz_ap_ct": 8.46,
+      "netz_verlust_ct": 0.0,
+      "snap_ap_ct": 6.77
+    },
+    {
+      "id": "kaernten",
+      "name": "Kärnten",
+      "netz_ct": 12.05,
+      "netz_ap_ct": 9.67,
+      "netz_verlust_ct": 0.368,
+      "snap_ap_ct": 7.74
+    },
+    {
+      "id": "klagenfurt",
+      "name": "Klagenfurt",
+      "netz_ct": 8.97,
+      "netz_ap_ct": 6.9,
+      "netz_verlust_ct": 0.578,
+      "snap_ap_ct": 5.52
+    },
+    {
+      "id": "niederoesterreich",
+      "name": "Niederösterreich",
+      "netz_ct": 11.01,
+      "netz_ap_ct": 8.79,
+      "netz_verlust_ct": 0.384,
+      "snap_ap_ct": 7.03
+    },
+    {
+      "id": "oberoesterreich",
+      "name": "Oberösterreich",
+      "netz_ct": 8.18,
+      "netz_ap_ct": 6.29,
+      "netz_verlust_ct": 0.528,
+      "snap_ap_ct": 5.03
+    },
+    {
+      "id": "linz",
+      "name": "Linz",
+      "netz_ct": 7.27,
+      "netz_ap_ct": 5.57,
+      "netz_verlust_ct": 0.487,
+      "snap_ap_ct": 4.46
+    },
+    {
+      "id": "salzburg",
+      "name": "Salzburg",
+      "netz_ct": 8.34,
+      "netz_ap_ct": 6.59,
+      "netz_verlust_ct": 0.357,
+      "snap_ap_ct": 5.27
+    },
+    {
+      "id": "steiermark",
+      "name": "Steiermark",
+      "netz_ct": 10.99,
+      "netz_ap_ct": 8.82,
+      "netz_verlust_ct": 0.336,
+      "snap_ap_ct": 7.06
+    },
+    {
+      "id": "graz",
+      "name": "Graz",
+      "netz_ct": 6.99,
+      "netz_ap_ct": 5.17,
+      "netz_verlust_ct": 0.658,
+      "snap_ap_ct": 4.14
+    },
+    {
+      "id": "tirol",
+      "name": "Tirol",
+      "netz_ct": 8.52,
+      "netz_ap_ct": 6.81,
+      "netz_verlust_ct": 0.293,
+      "snap_ap_ct": 5.45
+    },
+    {
+      "id": "innsbruck",
+      "name": "Innsbruck",
+      "netz_ct": 10.18,
+      "netz_ap_ct": 8.03,
+      "netz_verlust_ct": 0.453,
+      "snap_ap_ct": 6.42
+    },
+    {
+      "id": "vorarlberg",
+      "name": "Vorarlberg",
+      "netz_ct": 6.42,
+      "netz_ap_ct": 4.96,
+      "netz_verlust_ct": 0.393,
+      "snap_ap_ct": 3.97
+    },
+    {
+      "id": "wien",
+      "name": "Wien",
+      "netz_ct": 9.22,
+      "netz_ap_ct": 6.98,
+      "netz_verlust_ct": 0.7,
+      "snap_ap_ct": 5.58,
+      "hinweis": "In Wien kommt eine kommunale Gebrauchsabgabe auf das Netznutzungsentgelt dazu (rund 0,4–0,5 ct/kWh netto), die hier nicht enthalten ist."
+    },
+    {
+      "id": "kleinwalsertal",
+      "name": "Kleinwalsertal",
+      "netz_ct": 21.76,
+      "netz_ap_ct": 17.73,
+      "netz_verlust_ct": 0.401,
+      "snap_ap_ct": 14.18,
+      "hinweis": "Im Kleinwalsertal (Gemeinde Mittelberg) gilt ein Umsatzsteuersatz von 19 % statt 20 % — der Bruttowert kann dadurch geringfügig niedriger ausfallen."
+    }
+  ],
+  "snap_hinweis": "SNAP (Sommer-Nieder-Arbeitspreis): 1. April – 30. September, täglich 10–16 Uhr (§ 2 Abs. 1 Z 9). Die Verordnung gibt eigene SNAP-Arbeitspreise vor — sie werden hier übernommen, nicht gerechnet (sie entsprechen derzeit 80 % des Arbeitspreises, das ist aber keine Rechtsregel). Rabattiert wird nur das Netznutzungsentgelt, nicht das Verlustentgelt. Gilt nur bei viertelstündlich gemessenen und vom Netzbetreiber ausgelesenen Mengen; Mengen in einer Energiegemeinschaft sind ausgenommen (§ 5 Abs. 1b).",
+  "netz_grundpreis_eur_jahr_netto": 54.0,
+  "netz_grundpreis_hinweis": "Pauschale für die nicht gemessene Leistung, bundesweit einheitlich 54,00 €/Jahr netto (64,80 € brutto). Dazu kommen ein Messentgelt je Zählpunkt (netzbetreiberabhängig, rund 0,60–2,60 €/Monat netto) und die Erneuerbaren-Förderpauschale von 19,02 €/Jahr netto. Diese Beträge hängen nicht am Verbrauch und stecken deshalb NICHT im ct/kWh-Preis.",
+  "abgaben_ct": 0.86,
+  "abgaben_hinweis": "Zusätzlich zu den Netzentgelten fallen pro kWh an: Erneuerbaren-Förderbeitrag 0,583 ct auf den Arbeitspreis + 0,037 ct auf das Verlustentgelt (Erneuerbaren-Förderbeitragsverordnung 2026) sowie die Elektrizitätsabgabe. Diese ist 2026 für Haushalte am Hauptwohnsitz befristet auf 0,10 ct/kWh gesenkt (sonst 1,50 ct) — ab 2027 wieder höher. Summe netto 0,72 ct, brutto 0,86 ct/kWh."
 }

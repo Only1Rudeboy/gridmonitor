@@ -173,19 +173,54 @@ if(_t==="light"||_t==="dark")document.documentElement.dataset.theme=_t;}catch(e)
   #tarifdlg{position:fixed;inset:0;background:var(--scrim);z-index:50;
     display:flex;align-items:center;justify-content:center;padding:20px}
   #tarifdlg.hidden{display:none}
-  .dlg{background:var(--surface);border:1px solid var(--line);border-radius:16px;
-    padding:18px;width:100%;max-width:340px}
-  .dlg h3{font-size:14px;margin-bottom:12px}
-  .dlg label{display:flex;align-items:center;justify-content:space-between;
-    font-size:11px;color:var(--dim);margin-bottom:8px;gap:10px}
-  .dlg label.hidden{display:none}
-  .dlg input{width:90px;background:var(--surface2);border:1px solid var(--line);
-    color:var(--text);border-radius:8px;padding:7px 9px;font-size:13px;text-align:right}
-  .dlgrow{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
-  .dlgrow button{border-radius:9px;padding:9px 16px;font-size:12px;border:1px solid var(--line);
-    background:var(--surface2);color:var(--dim)}
-  .dlgrow button.primary{background:var(--blue);color:var(--onaccent);border-color:var(--blue);font-weight:600}
-  .dlgnote{font-size:9px;color:var(--faint);margin-top:10px;line-height:1.5}
+  .dlg{background:var(--surface);border:1px solid var(--line);border-radius:18px;
+    width:100%;max-width:380px;max-height:88vh;display:flex;flex-direction:column;
+    overflow:hidden;box-shadow:0 18px 48px rgba(0,0,0,.35)}
+  .dlghead{display:flex;align-items:center;gap:10px;padding:14px 16px;
+    border-bottom:1px solid var(--line);flex:none}
+  .dlghead h3{font-size:14px;font-weight:600}
+  .dlghead button{margin-left:auto;width:30px;height:30px;border-radius:50%;flex:none;
+    background:var(--surface2);border:1px solid var(--line);color:var(--dim);
+    font-size:13px;font-family:inherit}
+  .dlgbody{overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;
+    -webkit-overflow-scrolling:touch}
+  .dsec{background:var(--surface2);border:1px solid var(--line);border-radius:13px;
+    padding:11px 12px}
+  .dsec.hidden{display:none}
+  .dsec h4{font-size:9.5px;font-weight:700;letter-spacing:.06em;color:var(--dim);
+    text-transform:uppercase;display:flex;align-items:center;gap:7px;margin-bottom:9px}
+  .dsecnote{font-size:9.5px;color:var(--dim);line-height:1.5;margin-top:9px}
+  .drow{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:7px 0;font-size:12px;color:var(--text)}
+  .drow.hidden{display:none}
+  .drow + .drow{border-top:1px solid var(--line)}
+  .drow > span{display:flex;flex-direction:column;min-width:0}
+  .drow small{font-size:9.5px;color:var(--dim);margin-top:1px}
+  .dlg input{width:104px;flex:none;background:var(--surface);border:1px solid var(--line);
+    color:var(--text);border-radius:9px;padding:8px 10px;font-size:13px;text-align:right;
+    font-family:inherit}
+  .dlg input:focus{outline:none;border-color:var(--blue)}
+  /* Umschalter Hell / Dunkel */
+  .seg{display:flex;gap:6px}
+  .seg button{flex:1;background:var(--surface);border:1px solid var(--line);color:var(--dim);
+    border-radius:10px;padding:11px 8px;font-size:12px;font-family:inherit}
+  .seg button.on{border-color:var(--blue);color:var(--blue);background:var(--wash-blue);
+    font-weight:600}
+  /* Schiebeschalter */
+  .sw{position:relative;width:44px;height:26px;flex:none}
+  .sw input{position:absolute;inset:0;opacity:0;margin:0;width:100%;height:100%}
+  .sw i{position:absolute;inset:0;border-radius:13px;background:var(--line);
+    transition:background .18s;pointer-events:none;display:block}
+  .sw i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;
+    border-radius:50%;background:var(--surface);transition:transform .18s}
+  .sw input:checked + i{background:var(--blue)}
+  .sw input:checked + i::after{transform:translateX(18px)}
+  .dlgfoot{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);flex:none}
+  .dlgfoot button{flex:1;border-radius:11px;padding:12px 16px;font-size:12.5px;
+    border:1px solid var(--line);background:var(--surface2);color:var(--dim);
+    font-family:inherit}
+  .dlgfoot button.primary{background:var(--blue);color:var(--onaccent);
+    border-color:var(--blue);font-weight:700}
   #attrib{text-align:center;font-size:9px;color:var(--faint);padding:2px 10px 8px}
   #updbanner{background:var(--wash-cyan);border:1px solid var(--cyan);color:var(--cyan);
     border-radius:10px;padding:9px 12px;font-size:11px;margin-bottom:10px}
@@ -208,10 +243,10 @@ if(_t==="light"||_t==="dark")document.documentElement.dataset.theme=_t;}catch(e)
   .cost .now{margin-left:auto;width:76px;text-align:right}
   .cost .win{width:86px;text-align:right;color:var(--green)}
   #costnote{font-size:9px;color:var(--faint);margin-top:8px}
-  .dlg input[type=checkbox]{width:auto;accent-color:var(--blue)}
-  .dlg select{width:170px;background:var(--surface2);border:1px solid var(--line);
-    color:var(--text);border-radius:8px;padding:7px 6px;font-size:12px}
-  #t_pinfo{font-size:9px;color:var(--cyan);margin:-2px 0 8px;line-height:1.4}
+  .dlg select{width:170px;flex:none;background:var(--surface);border:1px solid var(--line);
+    color:var(--text);border-radius:9px;padding:8px 7px;font-size:12px;font-family:inherit}
+  #t_pinfo{font-size:9.5px;color:var(--cyan);line-height:1.45;padding:8px 0 2px}
+  #t_pinfo.hidden{display:none}
   /* Monatsvergleich */
   #mstrip{display:flex;gap:5px;margin-bottom:12px}
   .mb{flex:1;background:var(--surface2);border:1px solid var(--line);border-radius:9px;
@@ -373,41 +408,74 @@ if(_t==="light"||_t==="dark")document.documentElement.dataset.theme=_t;}catch(e)
 <div id="sponsor">Unterstützt von OSMOVOLTAIK e.U.</div>
 <div id="tarifdlg" class="hidden">
   <div class="dlg">
-    <h3>⚙ Mein Tarif</h3>
-    <label>Darstellung<select id="t_theme">
-      <option value="auto">automatisch (wie das Gerät)</option>
-      <option value="light">immer hell</option>
-      <option value="dark">immer dunkel</option>
-    </select></label>
-    <label>Anbieter<select id="t_anb"></select></label>
-    <label>Netzgebiet<select id="t_reg"></select></label>
-    <div id="t_pinfo" class="hidden"></div>
-    <label>Aufschlag (ct/kWh, netto)<input id="t_auf" inputmode="decimal"></label>
-    <label>Netzentgelt (ct/kWh, brutto)<input id="t_netz" inputmode="decimal"></label>
-    <label>MwSt (%)<input id="t_mwst" inputmode="decimal"></label>
-    <label>Schwelle günstig (ct)<input id="t_bil" inputmode="decimal"></label>
-    <label>Schwelle teuer (ct)<input id="t_teu" inputmode="decimal"></label>
-    <label>Ladefenster (Stunden)<input id="t_std" inputmode="numeric"></label>
-    <label>Lademenge (kWh)<input id="t_kwh" inputmode="decimal"></label>
-    <label>Vergleich: Fixtarif-Energiepreis (ct/kWh, leer = aus)
-      <input id="t_fix" inputmode="decimal"></label>
-    <label>Fixtarif-Preis ist brutto (inkl. MwSt)
-      <input type="checkbox" id="t_fixbrutto"></label>
-    <label>SNAP-Rabatt berücksichtigen (Apr–Sep, 10–16 Uhr)
-      <input type="checkbox" id="t_snap"></label>
-    <label id="t_notirow" class="hidden">Meldung, wenn das Ladefenster beginnt
-      <input type="checkbox" id="t_noti"></label>
-    <label id="t_alarmrow" class="hidden">Preis-Alarm unter … ct (leer = aus)
-      <input id="t_alarm" inputmode="decimal"></label>
-    <label id="t_pcrow" class="hidden">PC-Adresse für „Mein Verbrauch" (leer = aus)
-      <input id="t_pc" inputmode="url" placeholder="z. B. 192.168.1.109"></label>
-    <div class="dlgrow">
-      <button id="t_cancel">Abbrechen</button>
+    <div class="dlghead">
+      <h3>⚙ Einstellungen</h3>
+      <button id="t_cancel" title="Schließen">✕</button>
+    </div>
+    <div class="dlgbody">
+
+      <section class="dsec">
+        <h4><span class="led" style="background:var(--blue)"></span>Darstellung</h4>
+        <div class="seg" id="t_theme">
+          <button type="button" data-v="light">☀ Hell</button>
+          <button type="button" data-v="dark">🌙 Dunkel</button>
+        </div>
+      </section>
+
+      <section class="dsec">
+        <h4><span class="led" style="background:var(--cyan)"></span>Mein Tarif</h4>
+        <div class="drow"><span>Anbieter</span><select id="t_anb"></select></div>
+        <div class="drow"><span>Netzgebiet</span><select id="t_reg"></select></div>
+        <div id="t_pinfo" class="hidden"></div>
+        <div class="drow"><span>Aufschlag<small>ct/kWh, netto</small></span>
+          <input id="t_auf" inputmode="decimal"></div>
+        <div class="drow"><span>Netzentgelt<small>ct/kWh, brutto</small></span>
+          <input id="t_netz" inputmode="decimal"></div>
+        <div class="drow"><span>MwSt<small>Prozent</small></span>
+          <input id="t_mwst" inputmode="decimal"></div>
+        <div class="drow sw-row"><span>SNAP-Rabatt<small>Apr–Sep, 10–16 Uhr</small></span>
+          <label class="sw"><input type="checkbox" id="t_snap"><i></i></label></div>
+        <p class="dsecnote">Formel: (Börsenpreis + Aufschlag) × MwSt + Netzentgelt.
+          Beide Werte stehen auf deiner Stromrechnung.</p>
+      </section>
+
+      <section class="dsec">
+        <h4><span class="led" style="background:var(--green)"></span>Ladefenster</h4>
+        <div class="drow"><span>Dauer<small>Stunden</small></span>
+          <input id="t_std" inputmode="numeric"></div>
+        <div class="drow"><span>Lademenge<small>kWh je Ladung</small></span>
+          <input id="t_kwh" inputmode="decimal"></div>
+        <div class="drow"><span>Schwelle günstig<small>ct/kWh</small></span>
+          <input id="t_bil" inputmode="decimal"></div>
+        <div class="drow"><span>Schwelle teuer<small>ct/kWh</small></span>
+          <input id="t_teu" inputmode="decimal"></div>
+      </section>
+
+      <section class="dsec">
+        <h4><span class="led" style="background:var(--amber)"></span>Vergleich mit Fixtarif</h4>
+        <div class="drow"><span>Energiepreis<small>ct/kWh, leer = aus</small></span>
+          <input id="t_fix" inputmode="decimal" placeholder="—"></div>
+        <div class="drow sw-row"><span>Preis ist brutto<small>inklusive MwSt</small></span>
+          <label class="sw"><input type="checkbox" id="t_fixbrutto"><i></i></label></div>
+        <p class="dsecnote">Verglichen wird nur der Energieanteil — das Netzentgelt
+          zahlst du in beiden Tarifen gleich.</p>
+      </section>
+
+      <section class="dsec hidden" id="t_appsec">
+        <h4><span class="led" style="background:var(--red)"></span>Nur in der App</h4>
+        <div class="drow sw-row" id="t_notirow"><span>Meldung zum Ladefenster<small>wenn es beginnt</small></span>
+          <label class="sw"><input type="checkbox" id="t_noti"><i></i></label></div>
+        <div class="drow" id="t_alarmrow"><span>Preis-Alarm unter<small>ct/kWh, leer = aus</small></span>
+          <input id="t_alarm" inputmode="decimal" placeholder="—"></div>
+        <div class="drow" id="t_pcrow"><span>PC-Adresse<small>für „Mein Verbrauch"</small></span>
+          <input id="t_pc" inputmode="url" placeholder="192.168.1.109"></div>
+      </section>
+
+    </div>
+    <div class="dlgfoot">
+      <button id="t_abort">Abbrechen</button>
       <button id="t_save" class="primary">Speichern</button>
     </div>
-    <p class="dlgnote">Formel: (Börsenpreis + Aufschlag) × MwSt + Netzentgelt.
-    Aufschlag und Netzentgelt stehen auf deiner Stromrechnung
-    (VKW Strom dynamisch: 1,20 · Netz je nach Region).</p>
   </div>
 </div>
 <div id="apkrow" class="hidden" style="text-align:center;padding:6px 0 10px">
@@ -1533,22 +1601,23 @@ function renderAll() {
   renderHeat(); renderArch(null); renderVerb(); renderMonat();
 }
 /* ============================ Hell / Dunkel ============================ */
+/* Genau zwei Themen. Beim allerersten Start entscheidet die Geräteeinstellung,
+   danach gilt immer die getroffene Wahl. */
 function themeMode() {
   try {
     const t = localStorage.gmTheme;
-    return (t === "light" || t === "dark") ? t : "auto";
-  } catch (e) { return "auto"; }   // Speicher gesperrt (privater Modus)
+    if (t === "light" || t === "dark") return t;
+  } catch (e) {}
+  try {
+    return matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  } catch (e) { return "dark"; }
 }
 function applyTheme(mode) {
-  if (mode) {
-    try {
-      if (mode === "auto") delete localStorage.gmTheme;
-      else localStorage.gmTheme = mode;
-    } catch (e) {}
+  if (mode === "light" || mode === "dark") {
+    try { localStorage.gmTheme = mode; } catch (e) {}
   }
   const m = themeMode();
-  if (m === "auto") delete document.documentElement.dataset.theme;
-  else document.documentElement.dataset.theme = m;
+  document.documentElement.dataset.theme = m;
   readCol();
   for (const el of document.querySelectorAll('meta[name="theme-color"]')) el.remove();
   const meta = document.createElement("meta");
@@ -1561,9 +1630,14 @@ function applyTheme(mode) {
   setStatus(LASTSTATUS.key, LASTSTATUS.txt);
   if (S) renderAll(); else { renderVerb(); renderMonat(); }
 }
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
-  if (themeMode() === "auto") applyTheme();
-});
+/* Die Geräteeinstellung zählt nur, solange nichts gewählt wurde. */
+try {
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    let gewaehlt = false;
+    try { gewaehlt = !!localStorage.gmTheme; } catch (e) {}
+    if (!gewaehlt) applyTheme();
+  });
+} catch (e) {}
 const pn = (v, lo, hi, fb) => {
   const x = parseFloat(String(v).replace(",", "."));
   return isNaN(x) ? fb : Math.max(lo, Math.min(hi, x));
@@ -1620,14 +1694,16 @@ function openTarif() {
   $("t_teu").value = de(CFG.price_expensive, 0);
   $("t_std").value = CFG.best_window_hours;
   $("t_kwh").value = de(CFG.charge_kwh, 0);
-  $("t_notirow").classList.toggle("hidden", !window.AndroidBridge);
+  const inApp = !!window.AndroidBridge, amPC = location.protocol === "file:";
+  $("t_appsec").classList.toggle("hidden", !inApp && !amPC);
+  $("t_notirow").classList.toggle("hidden", !inApp);
   $("t_noti").checked = CFG.notify_window !== false;
-  $("t_alarmrow").classList.toggle("hidden", !window.AndroidBridge);
+  $("t_alarmrow").classList.toggle("hidden", !inApp);
   $("t_alarm").value = CFG.alarm_ct > 0 ? de(CFG.alarm_ct, 0) : "";
-  $("t_theme").value = themeMode();
+  markiereTheme();
   $("t_fix").value = CFG.fix_ct > 0 ? de(CFG.fix_ct) : "";
   $("t_fixbrutto").checked = CFG.fix_brutto !== false;
-  $("t_pcrow").classList.toggle("hidden", location.protocol !== "file:");
+  $("t_pcrow").classList.toggle("hidden", !amPC);
   $("t_pc").value = (localStorage.gmServer || "")
     .replace(/^https?:\/\//, "").replace(/:8480$/, "");
   $("t_snap").checked = CFG.snap !== false;
@@ -1652,11 +1728,17 @@ $("t_reg").addEventListener("change", () => {
 });
 $("t_netz").addEventListener("input", () => { regComp = null; });
 $("tarifbtn").addEventListener("click", openTarif);
-$("t_cancel").addEventListener("click", () => $("tarifdlg").classList.add("hidden"));
+for (const id of ["t_cancel", "t_abort"])
+  $(id).addEventListener("click", () => $("tarifdlg").classList.add("hidden"));
 $("tarifdlg").addEventListener("click", e => {
   if (e.target === $("tarifdlg")) $("tarifdlg").classList.add("hidden");
 });
-$("t_theme").addEventListener("change", e => applyTheme(e.target.value));
+function markiereTheme() {
+  const m = themeMode();
+  for (const b of $("t_theme").children) b.classList.toggle("on", b.dataset.v === m);
+}
+for (const b of $("t_theme").children)
+  b.addEventListener("click", () => { applyTheme(b.dataset.v); markiereTheme(); });
 $("t_save").addEventListener("click", () => {
   const t = {
     aufschlag_ct: pn($("t_auf").value, -10, 50, DEFAULTS.aufschlag_ct),

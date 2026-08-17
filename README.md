@@ -52,7 +52,8 @@ günstigsten?** — **Und was hat mich das am Monatsende wirklich gekostet?**
 - **Benachrichtigung**, wenn das günstigste Ladefenster beginnt *(Android)*
 - **Homescreen-Widget** mit aktuellem Preis *(Android)*
 - **Selbst-Aktualisierung** — die App lädt neue Fassungen selbst und installiert sie
-- **Hell und dunkel**, automatisch nach Systemeinstellung oder fest gewählt
+- **Hell und dunkel** — mit einem Tipp umschaltbar; beim ersten Start richtet sich die
+  App nach der Geräteeinstellung
 - **Eigener Tarif** (⚙ Mein Tarif) mit Presets für ganz Österreich
 - **Warnung bei veralteten Daten**
 

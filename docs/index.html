@@ -225,6 +225,12 @@ if(_t==="light"||_t==="dark")document.documentElement.dataset.theme=_t;}catch(e)
   #csvbtn{flex:none;background:var(--surface2);border:1px solid var(--line);color:var(--dim);
     border-radius:8px;padding:6px 12px;font-size:10px;font-family:inherit}
   #csvbtn:active{border-color:var(--cyan);color:var(--cyan)}
+  #verrow{display:flex;align-items:center;justify-content:center;gap:9px;
+    padding:2px 10px 10px;flex-wrap:wrap}
+  #updbtn{background:var(--surface2);border:1px solid var(--line);color:var(--dim);
+    border-radius:9px;padding:7px 14px;font-size:11px;font-family:inherit}
+  #updbtn:active{border-color:var(--cyan);color:var(--cyan)}
+  #updinfo{font-size:10px;color:var(--faint)}
   #disclaim{text-align:center;font-size:9px;color:var(--faint);padding:0 10px 4px}
   #disclaim a{color:var(--dim)}
 </style>
@@ -392,6 +398,10 @@ if(_t==="light"||_t==="dark")document.documentElement.dataset.theme=_t;}catch(e)
     Aufschlag und Netzentgelt stehen auf deiner Stromrechnung
     (VKW Strom dynamisch: 1,20 · Netz je nach Region).</p>
   </div>
+</div>
+<div id="verrow">
+  <button id="updbtn">🔄 Auf Updates prüfen</button>
+  <span id="updinfo"></span>
 </div>
 <div id="apkrow" class="hidden" style="text-align:center;padding:6px 0 10px">
   <a id="apklink" href="/app.apk" style="color:var(--cyan);font-size:12px;
@@ -1689,25 +1699,70 @@ document.addEventListener("visibilitychange", () => {
   if (!document.hidden) loadData();
 });
 window.addEventListener("resize", () => { if (S) renderAll(); });
-async function checkUpdate() {
+/* Versionen stellenweise vergleichen. Die alte Rechnung (Ziffern zu einer Zahl
+   verschmelzen) hielt 1.4.1 für neuer als 1.7 — dadurch kam nie ein Hinweis. */
+function cmpVer(a, b) {
+  const pa = String(a).split("."), pb = String(b).split(".");
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (parseInt(pa[i], 10) || 0) - (parseInt(pb[i], 10) || 0);
+    if (d) return d > 0 ? 1 : -1;
+  }
+  return 0;
+}
+function appVersion() {
   try {
-    if (!window.AndroidBridge || !AndroidBridge.getVersion) return;
-    const mine = AndroidBridge.getVersion();
-    if (!mine) return;
-    const r = await fetch(
-      "https://api.github.com/repos/Only1Rudeboy/gridmonitor/releases/latest",
-      {cache: "no-store"});
-    if (!r.ok) return;
-    const latest = ((await r.json()).tag_name || "").replace(/^v/, "");
-    const num = s => s.split(".").reduce((a, x) => a * 1000 + (parseInt(x, 10) || 0), 0);
-    if (latest && num(latest) > num(mine)) {
-      $("updbanner").innerHTML = "📲 Version " + latest +
-        ' ist da — <a href="' + APK_URL + '">jetzt aktualisieren</a>';
-      $("updbanner").classList.remove("hidden");
+    if (window.AndroidBridge && typeof AndroidBridge.getVersion === "function")
+      return AndroidBridge.getVersion() || "";
+  } catch (e) {}
+  return "";
+}
+function oeffne(url) {                    // im WebView sonst wirkungslos
+  try {
+    if (window.AndroidBridge && typeof AndroidBridge.openUrl === "function") {
+      AndroidBridge.openUrl(url);
+      return;
     }
   } catch (e) {}
+  window.open(url, "_blank");
 }
-checkUpdate();
+async function neuesteVersion() {
+  const r = await fetch(
+    "https://api.github.com/repos/Only1Rudeboy/gridmonitor/releases/latest",
+    {cache: "no-store", headers: {"Accept": "application/vnd.github+json"}});
+  if (!r.ok) throw new Error(r.status);
+  const j = await r.json();
+  return {tag: (j.tag_name || "").replace(/^v/, ""), seite: j.html_url || ""};
+}
+function zeigeBanner(neu) {
+  $("updbanner").innerHTML = "📲 Version " + neu + " ist da — " +
+    '<a href="#" id="updlink">jetzt herunterladen</a>';
+  $("updbanner").classList.remove("hidden");
+  $("updlink").addEventListener("click", e => { e.preventDefault(); oeffne(APK_URL); });
+}
+async function checkUpdate(manuell) {
+  const info = t => { $("updinfo").textContent = t; };
+  const mine = appVersion();
+  if (manuell) info("suche …");
+  try {
+    const {tag} = await neuesteVersion();
+    if (!tag) throw new Error("leer");
+    if (!mine) {                          // Web-App: immer der neueste Stand
+      if (manuell)
+        info("Web-App ist immer aktuell · Android-App: " + tag);
+      return;
+    }
+    if (cmpVer(tag, mine) > 0) {
+      zeigeBanner(tag);
+      if (manuell) info("Version " + tag + " verfügbar — siehe Hinweis oben");
+    } else if (manuell) {
+      info("Version " + mine + " — du bist aktuell");
+    }
+  } catch (e) {
+    if (manuell) info("keine Verbindung zu GitHub");
+  }
+}
+$("updbtn").addEventListener("click", () => checkUpdate(true));
+checkUpdate(false);
 if ("serviceWorker" in navigator && location.protocol === "https:") {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }

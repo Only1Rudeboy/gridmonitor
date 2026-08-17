@@ -20,8 +20,8 @@ günstigsten?** — **Und was hat mich das am Monatsende wirklich gekostet?**
 | ![Preis jetzt und bestes Ladefenster](docs/screenshots/preis-fenster.png) | ![Preisverlauf und Stundenraster](docs/screenshots/verlauf-raster.png) |
 | **Eigener Verbrauch** | **Monatsvergleich** |
 | ![Verbrauch und Kosten pro Tag](docs/screenshots/verbrauch.png) | ![Monatsvergleich gegen Fixtarif](docs/screenshots/monatsvergleich.png) |
-| **Jahres-Heatmap & Archiv** | **Hell und dunkel** |
-| ![Jahres-Heatmap und Tagesarchiv](docs/screenshots/heatmap-archiv.png) | ![Dunkle Darstellung](docs/screenshots/dunkel.png) |
+| **Jahres-Heatmap & Archiv** | **Auch in Hell** |
+| ![Jahres-Heatmap und Tagesarchiv](docs/screenshots/heatmap-archiv.png) | ![Helle Darstellung](docs/screenshots/hell.png) |
 
 ## 📱 Nutzen
 

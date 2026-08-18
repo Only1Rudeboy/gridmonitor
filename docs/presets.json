@@ -183,5 +183,117 @@
   "netz_grundpreis_eur_jahr_netto": 54.0,
   "netz_grundpreis_hinweis": "Pauschale für die nicht gemessene Leistung, bundesweit einheitlich 54,00 €/Jahr netto (64,80 € brutto). Dazu kommen ein Messentgelt je Zählpunkt (netzbetreiberabhängig, rund 0,60–2,60 €/Monat netto) und die Erneuerbaren-Förderpauschale von 19,02 €/Jahr netto. Diese Beträge hängen nicht am Verbrauch und stecken deshalb NICHT im ct/kWh-Preis.",
   "abgaben_ct": 0.86,
-  "abgaben_hinweis": "Zusätzlich zu den Netzentgelten fallen pro kWh an: Erneuerbaren-Förderbeitrag 0,583 ct auf den Arbeitspreis + 0,037 ct auf das Verlustentgelt (Erneuerbaren-Förderbeitragsverordnung 2026) sowie die Elektrizitätsabgabe. Diese ist 2026 für Haushalte am Hauptwohnsitz befristet auf 0,10 ct/kWh gesenkt (sonst 1,50 ct) — ab 2027 wieder höher. Summe netto 0,72 ct, brutto 0,86 ct/kWh."
+  "abgaben_hinweis": "Zusätzlich zu den Netzentgelten fallen pro kWh an: Erneuerbaren-Förderbeitrag 0,583 ct auf den Arbeitspreis + 0,037 ct auf das Verlustentgelt (Erneuerbaren-Förderbeitragsverordnung 2026) sowie die Elektrizitätsabgabe. Diese ist 2026 für Haushalte am Hauptwohnsitz befristet auf 0,10 ct/kWh gesenkt (sonst 1,50 ct) — ab 2027 wieder höher. Summe netto 0,72 ct, brutto 0,86 ct/kWh.",
+  "fixtarife": [
+    {
+      "id": "vkw_duo",
+      "name": "VKW Strom Duo",
+      "region": "Vorarlberg",
+      "ct_netto": 9.4,
+      "sommer_ct_netto": 8.4,
+      "stand": "01.04.2026",
+      "quelle": "vkw.at",
+      "sicher": "hoch",
+      "info": "inkl. Rabatt −2,80 · Sommertarif 1.4.–30.9. tgl. 10–16 Uhr · Preisgarantie bis 31.03.2027"
+    },
+    {
+      "id": "verbund_at",
+      "name": "Verbund Österreich-Tarif",
+      "region": "österreichweit",
+      "ct_netto": 9.5,
+      "stand": "01.03.2026",
+      "quelle": "verbund.com",
+      "sicher": "mittel",
+      "info": "Aktionspreis erstes Jahr; ohne Rabatt 12,50 ct netto"
+    },
+    {
+      "id": "salzburg_fix",
+      "name": "Salzburg AG Strom Preisfix",
+      "region": "Salzburg",
+      "ct_netto": 9.9,
+      "stand": "01.07.2026",
+      "quelle": "salzburg-ag.at",
+      "sicher": "mittel",
+      "info": "Preisgarantie bis 30.06.2028"
+    },
+    {
+      "id": "wien_optima",
+      "name": "Wien Energie OPTIMA Entspannt plus",
+      "region": "Wien",
+      "ct_netto": 9.99,
+      "stand": "07/2026",
+      "quelle": "wienenergie.at",
+      "sicher": "mittel",
+      "info": "inkl. Rabatt, 12 Monate Bindung · in Wien zusätzlich Gebrauchsabgabe"
+    },
+    {
+      "id": "evn_optima",
+      "name": "EVN Optima Garant Sonne",
+      "region": "Niederösterreich",
+      "ct_netto": 10.0,
+      "stand": "01.04.2026",
+      "quelle": "evn.at",
+      "sicher": "niedrig",
+      "info": "Anbieter nennt nur einen Durchschnitt aus Haupt- und Nebenzeit"
+    },
+    {
+      "id": "energieag",
+      "name": "Energie AG Oberösterreich",
+      "region": "Oberösterreich",
+      "ct_netto": 10.0,
+      "stand": "04.05.2026",
+      "quelle": "energieag.at",
+      "sicher": "mittel"
+    },
+    {
+      "id": "estmk",
+      "name": "Energie Steiermark",
+      "region": "Steiermark",
+      "ct_netto": 11.4,
+      "stand": "2026",
+      "quelle": "e-steiermark.com",
+      "sicher": "mittel"
+    },
+    {
+      "id": "kelag",
+      "name": "Kelag",
+      "region": "Kärnten",
+      "ct_netto": 12.5,
+      "stand": "2026",
+      "quelle": "Vergleichsportale",
+      "sicher": "niedrig",
+      "info": "aus Bruttoangabe zurückgerechnet — bitte mit der Rechnung abgleichen"
+    },
+    {
+      "id": "burgenland",
+      "name": "Burgenland Energie",
+      "region": "Burgenland",
+      "ct_netto": 13.2,
+      "stand": "2026",
+      "quelle": "Vergleichsportale",
+      "sicher": "niedrig",
+      "info": "aus Bruttoangabe zurückgerechnet — bitte mit der Rechnung abgleichen"
+    },
+    {
+      "id": "linzag",
+      "name": "Linz AG",
+      "region": "Linz",
+      "ct_netto": 18.04,
+      "stand": "2026",
+      "quelle": "Vergleichsportale",
+      "sicher": "niedrig",
+      "info": "aus Bruttoangabe zurückgerechnet — bitte mit der Rechnung abgleichen"
+    },
+    {
+      "id": "tiwag_float",
+      "name": "TIWAG float privat",
+      "region": "Tirol",
+      "ct_netto": 15.25,
+      "stand": "08/2026",
+      "quelle": "tiwag.at",
+      "sicher": "hoch",
+      "info": "monatlich neu festgelegt — Wert jeden Monat nachtragen"
+    }
+  ],
+  "fix_hinweis": "Startwerte für gängige Fixtarife, Stand siehe je Tarif. Energiepreise ändern sich häufig und hängen vom konkreten Vertrag ab (Rabatte, Bindung, Bestands- oder Neukunde). Bitte immer mit der eigenen Rechnung abgleichen — der Wert ist frei änderbar. Netzentgelt, Abgaben und der SNAP-Rabatt gelten unabhängig vom Tarif."
 }

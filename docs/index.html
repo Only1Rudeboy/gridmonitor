@@ -193,6 +193,10 @@ if(_t==="light"||_t==="dark")document.documentElement.dataset.theme=_t;}catch(e)
   .drow{display:flex;align-items:center;justify-content:space-between;gap:12px;
     padding:7px 0;font-size:12px;color:var(--text)}
   .drow.hidden{display:none}
+  .drow.dynonly, .drow.fixonly, .dsecnote.fixonly{display:none}
+  .dlg[data-typ="dyn"] .drow.dynonly{display:flex}
+  .dlg[data-typ="fix"] .drow.fixonly{display:flex}
+  .dlg[data-typ="fix"] .dsecnote.fixonly{display:block}
   .drow + .drow{border-top:1px solid var(--line)}
   .drow > span{display:flex;flex-direction:column;min-width:0}
   .drow small{font-size:9.5px;color:var(--dim);margin-top:1px}
@@ -424,20 +428,29 @@ if(_t==="light"||_t==="dark")document.documentElement.dataset.theme=_t;}catch(e)
 
       <section class="dsec">
         <h4><span class="led" style="background:var(--cyan)"></span>Mein Tarif</h4>
-        <div class="drow"><span>Anbieter</span><select id="t_anb"></select></div>
+        <div class="seg" id="t_typ" style="margin-bottom:10px">
+          <button type="button" data-v="dyn">📈 Dynamisch</button>
+          <button type="button" data-v="fix">📌 Fixpreis</button>
+        </div>
+        <div class="drow dynonly"><span>Anbieter</span><select id="t_anb"></select></div>
         <div class="drow"><span>Netzgebiet</span><select id="t_reg"></select></div>
         <div id="t_pinfo" class="hidden"></div>
-        <div class="drow"><span>Aufschlag<small>ct/kWh, netto</small></span>
+        <div class="drow fixonly"><span>Fixtarif</span><select id="t_fixsel"></select></div>
+        <div class="drow fixonly"><span>Energiepreis<small>ct/kWh, brutto</small></span>
+          <input id="t_fixe" inputmode="decimal"></div>
+        <div class="drow fixonly"><span>Sommertarif 10–16 Uhr<small>ct/kWh brutto, leer = keiner</small></span>
+          <input id="t_fixs" inputmode="decimal" placeholder="—"></div>
+        <div class="drow dynonly"><span>Aufschlag<small>ct/kWh, netto</small></span>
           <input id="t_auf" inputmode="decimal"></div>
         <div class="drow"><span>Netzentgelt<small>ct/kWh, brutto</small></span>
           <input id="t_netz" inputmode="decimal"></div>
-        <div class="drow"><span>MwSt<small>Prozent</small></span>
+        <div class="drow dynonly"><span>MwSt<small>Prozent</small></span>
           <input id="t_mwst" inputmode="decimal"></div>
         <div class="drow"><span>Abgaben<small>ct/kWh, brutto — Ökostrom + Stromsteuer</small></span>
           <input id="t_abg" inputmode="decimal"></div>
         <div class="drow sw-row"><span>SNAP-Rabatt<small>Apr–Sep, 10–16 Uhr</small></span>
           <label class="sw"><input type="checkbox" id="t_snap"><i></i></label></div>
-        <p class="dsecnote">Formel: (Börsenpreis + Aufschlag) × MwSt + Netzentgelt + Abgaben.
+        <p class="dsecnote" id="t_formel">Formel: (Börsenpreis + Aufschlag) × MwSt + Netzentgelt + Abgaben.
           Netzentgelt und Abgaben bitte <b>brutto</b> eintragen — sie sind hier schon
           inklusive Umsatzsteuer gemeint. Nicht enthalten sind Beträge, die nicht am
           Verbrauch hängen: Netz-Grundpreis (64,80 €/Jahr), Messentgelt und die
@@ -457,9 +470,11 @@ if(_t==="light"||_t==="dark")document.documentElement.dataset.theme=_t;}catch(e)
       </section>
 
       <section class="dsec">
-        <h4><span class="led" style="background:var(--amber)"></span>Vergleich mit Fixtarif</h4>
-        <div class="drow"><span>Energiepreis<small>ct/kWh, leer = aus</small></span>
+        <h4><span class="led" style="background:var(--amber)"></span><span id="t_vglkopf">Vergleich mit Fixtarif</span></h4>
+        <div class="drow dynonly"><span>Energiepreis<small>ct/kWh, leer = aus</small></span>
           <input id="t_fix" inputmode="decimal" placeholder="—"></div>
+        <p class="dsecnote fixonly" id="t_vglnote">Der Vergleich läuft automatisch gegen den
+          Börsenpreis — du siehst Monat für Monat, was ein dynamischer Tarif gekostet hätte.</p>
         <div class="drow sw-row"><span>Preis ist brutto<small>inklusive MwSt</small></span>
           <label class="sw"><input type="checkbox" id="t_fixbrutto"><i></i></label></div>
         <p class="dsecnote">Verglichen wird nur der Energieanteil — das Netzentgelt
@@ -496,6 +511,9 @@ const DEFAULTS = {
   // (4,96 Arbeitspreis + 0,393 Verlustentgelt) × 1,2 = 6,42 ct/kWh.
   // abgaben_ct ist ebenfalls brutto: Erneuerbaren-Förderbeitrag + Elektrizitätsabgabe.
   aufschlag_ct: 1.20, netzentgelt_ct: 6.42, abgaben_ct: 0.86, mwst: 1.20,
+  tarif_typ: "dyn",            // "dyn" = Börsenpreis, "fix" = fester Energiepreis
+  fix_energie_ct: 0,           // brutto; nur bei tarif_typ "fix"
+  fix_sommer_ct: 0,            // brutto; verbilligter Sommertarif 10–16 Uhr, 0 = keiner
   price_cheap: 12.0, price_expensive: 30.0, best_window_hours: 3, charge_kwh: 11.0,
 };
 const HUB = "https://only1rudeboy.github.io/gridmonitor";                 // Daten-Verteiler (GitHub Pages)
@@ -540,8 +558,20 @@ function netzAt(when) {
   return Math.round(CFG.netzentgelt_ct * 0.8 * 100) / 100;   // Näherung ohne Komponenten
 }
 const abgabenCt = () => +CFG.abgaben_ct || 0;
+const istFix = () => CFG.tarif_typ === "fix" && +CFG.fix_energie_ct > 0;
+/* Energieanteil brutto. Beim Fixtarif ist er konstant — außer der Anbieter hat
+   ein verbilligtes Sommerfenster (10–16 Uhr, wie der SNAP beim Netz). */
+function energieAt(epex, when) {
+  if (istFix()) {
+    const s = +CFG.fix_sommer_ct || 0;
+    return (s > 0 && when && isSnap(when)) ? s : +CFG.fix_energie_ct;
+  }
+  return (epex + CFG.aufschlag_ct) * CFG.mwst;
+}
+/* Was dieselbe Menge im dynamischen Tarif kosten würde — für den Vergleich. */
+const dynEnergieAt = epex => (epex + CFG.aufschlag_ct) * CFG.mwst;
 const effAt = (epex, when) =>
-  Math.round(((epex + CFG.aufschlag_ct) * CFG.mwst + netzAt(when) + abgabenCt()) * 100) / 100;
+  Math.round((energieAt(epex, when) + netzAt(when) + abgabenCt()) * 100) / 100;
 const eff = epex => effAt(epex, null);
 const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const COL = {};
@@ -874,8 +904,25 @@ function tickCountdown() {
 }
 
 /* ==================== Ladefenster + KPIs ==================== */
+/* Beim Fixtarif schwankt der Preis nur durch SNAP/Sommertarif — außerhalb
+   dieser Zeiten ist er den ganzen Tag gleich. Das gehört gesagt. */
+function preisKonstant(liste) {
+  if (!liste || !liste.length) return false;
+  const w = liste.map(p => p.effective);
+  return Math.max(...w) - Math.min(...w) < 0.011;
+}
 function renderWindow() {
   $("fhours").textContent = CFG.best_window_hours + " h";
+  if (istFix() && preisKonstant(S.today) && preisKonstant(S.tomorrow)) {
+    $("fwins").innerHTML =
+      '<div class="leer" style="flex:1;padding:14px 0;line-height:1.6">' +
+      "Mit deinem Fixtarif kostet Strom heute rund um die Uhr gleich viel — " +
+      de(S.today.length ? S.today[0].effective : 0) + " ct/kWh.<br>" +
+      "Ein günstigstes Fenster gibt es nur von April bis September: Dann ist das " +
+      "Netzentgelt zwischen 10 und 16 Uhr um 20 % niedriger." + "</div>";
+    $("kpis").innerHTML = "";
+    return;
+  }
   const wt = S.windowToday, wm = S.windowTomorrow;
   const todayUsable = wt && wt.end > new Date();
   const bothBest = todayUsable && wm ? (wt.avg <= wm.avg ? "HEUTE" : "MORGEN")
@@ -1130,31 +1177,46 @@ function renderMonat() {
     b.addEventListener("click", () => { MSEL = b.dataset.ym; renderMonat(); });
 
   const grob = m.tage_exakt === 0;              // reine Näherung: keine Cent-Genauigkeit
-  if (!fix) {
+  // Der PC rechnet mit SEINER Tarifeinstellung. Steht auf diesem Gerät ein
+  // Fixtarif, drehen wir den Vergleich hier um — die Energiekosten des
+  // dynamischen Modells liefert der PC ja mit.
+  const seiteFix = istFix();
+  const fixKunde = seiteFix || !!m.istfix;
+  const eigenLbl = fixKunde ? "Fixtarif" : "dynamisch";
+  const altLbl = fixKunde ? "dynamisch" : "Fixtarif";
+  let eigenEur = m.eur_energie, altEur = m.eur_fix, ctEigen = m.ct_dyn, ctAlt = m.fix_ct;
+  if (seiteFix && !m.istfix) {
+    eigenEur = m.kwh * (+CFG.fix_energie_ct) / 100;
+    altEur = m.eur_energie;
+    ctEigen = +CFG.fix_energie_ct;
+    ctAlt = m.ct_dyn;
+  }
+  const hatVergleich = seiteFix ? true : m.delta != null;
+  if (!hatVergleich) {
     $("msign").textContent = zeitraum.toUpperCase() + " · GESAMT";
     $("mbig").textContent = de(m.eur) + " €";
     $("mbig").style.color = COL.text;
     $("msub").textContent = de(m.kwh, 1) + " kWh · Energie " + de(m.ct_dyn) + " ct/kWh";
     $("mbars").innerHTML = "";
-    $("mnetz").innerHTML = "Für den Vergleich mit einem Fixtarif dessen Energiepreis " +
-      'unter „⚙ Mein Tarif" eintragen. Dann steht hier, ob sich der dynamische Tarif ' +
-      "in diesem Monat gelohnt hat.";
+    $("mnetz").innerHTML = "Für den Vergleich unter \u201eMein Tarif\u201c den " +
+      "Energiepreis des anderen Tarifmodells eintragen. Dann steht hier, welches " +
+      "der beiden in diesem Monat günstiger war.";
     return;
   }
-  const eurFix = m.kwh * fix / 100, delta = eurFix - m.eur_energie;
+  const eurFix = altEur, delta = altEur - eigenEur;
   const neutral = Math.abs(delta) < 0.5;
   const col = neutral ? COL.dim : (delta >= 0 ? COL.green : COL.red);
   $("msign").textContent = zeitraum.toUpperCase() + " · " +
-    (neutral ? "PRAKTISCH GLEICH WIE FIXTARIF"
-             : delta >= 0 ? "GESPART GEGENÜBER FIXTARIF" : "DRAUFGEZAHLT GEGENÜBER FIXTARIF");
+    (neutral ? "PRAKTISCH GLEICH" : (delta >= 0 ? "GESPART" : "DRAUFGEZAHLT")) +
+    " GEGENÜBER " + altLbl.toUpperCase();
   $("mbig").textContent = (grob ? "≈ " : "") + (delta >= 0 ? "+" : "−") +
     de(Math.abs(delta), grob ? 0 : 2) + " €";
   $("mbig").style.color = col;
-  $("msub").textContent = "dynamisch " + de(m.ct_dyn) + " ct gegen fix " + de(fix) +
-    " ct/kWh · " + de(m.kwh, 1) + " kWh";
-  const mx = Math.max(m.eur_energie, eurFix, .01);
+  $("msub").textContent = eigenLbl + " " + de(ctEigen) + " ct gegen " + altLbl + " " +
+    de(ctAlt) + " ct/kWh · " + de(m.kwh, 1) + " kWh";
+  const mx = Math.max(eigenEur, eurFix, .01);
   $("mbars").innerHTML =
-    [["dynamisch", m.eur_energie, COL.blue], ["Fixtarif", eurFix, COL.faint]].map(
+    [[eigenLbl, eigenEur, COL.blue], [altLbl, eurFix, COL.faint]].map(
       ([l, v, c]) => `<div class="mrow"><span class="ml">${l}</span>` +
         `<span class="bar"><i style="width:${Math.max(3, v / mx * 100)}%;background:${c}"></i></span>` +
         `<span class="mv">${de(v)} €</span></div>`).join("");
@@ -1165,9 +1227,12 @@ function renderMonat() {
     hinweis += "<br><b>Schätzung:</b> Ohne Viertelstundenwerte wird jede kWh mit dem " +
       "Tagesdurchschnitt bewertet. Wie hoch der Betrag wirklich ist, hängt davon ab, zu " +
       "welchen Uhrzeiten du verbraucht hast — deshalb steht hier eine gerundete Zahl.";
+    if (seiteFix && !m.istfix && +CFG.fix_sommer_ct > 0)
+      hinweis += " Der verbilligte Sommertarif deines Anbieters ist in dieser " +
+        "Monatssumme noch nicht berücksichtigt — der echte Vorteil ist etwas größer.";
     if (m.anteil_unter_fix != null)
       hinweis += " Die Richtung ist trotzdem belastbar: Der Börsenpreis lag in diesem " +
-        "Zeitraum nur " + de(m.anteil_unter_fix, 0) + " % der Zeit unter deinem Fixtarif.";
+        "Zeitraum nur " + de(m.anteil_unter_fix, 0) + " % der Zeit unter dem Fixpreis.";
   }
   $("mnetz").innerHTML = hinweis;
 }
@@ -1306,12 +1371,18 @@ function renderParts() {
   const energie = cur.epex + CFG.aufschlag_ct;
   const netzNow = netzAt(cur.start);
   const snapAktiv = netzNow < CFG.netzentgelt_ct - 0.001;
-  const parts = [
+  const eFix = energieAt(cur.epex, cur.start);
+  const sommerFix = istFix() && +CFG.fix_sommer_ct > 0 && eFix < +CFG.fix_energie_ct - .001;
+  const parts = istFix()
+    ? [[sommerFix ? "Energiepreis · Sommertarif" : "Energiepreis (fix)", eFix, COL.blue]]
+    : [
     ["Börsenpreis (EPEX)", cur.epex, COL.blue],
     ["Aufschlag", CFG.aufschlag_ct, mixc(COL.blue, COL.cyan, .55)],
     [`MwSt ${Math.round((CFG.mwst - 1) * 100)} % auf Energie`, energie * (CFG.mwst - 1),
       mixc(COL.cyan, COL.dim, .6)],
     [snapAktiv ? "Netzentgelt · SNAP" : "Netzentgelt", netzNow, COL.cyan]];
+  if (istFix())
+    parts.push([snapAktiv ? "Netzentgelt · SNAP" : "Netzentgelt", netzNow, COL.cyan]);
   if (abgabenCt() > 0)
     parts.push(["Abgaben (Ökostrom, Stromsteuer)", abgabenCt(),
                 mixc(COL.cyan, COL.green, .5)]);
@@ -1719,6 +1790,10 @@ function openTarif() {
   $("t_alarmrow").classList.toggle("hidden", !inApp);
   $("t_alarm").value = CFG.alarm_ct > 0 ? de(CFG.alarm_ct, 0) : "";
   markiereTheme();
+  fuelleFixListe();
+  $("t_fixe").value = CFG.fix_energie_ct > 0 ? de(CFG.fix_energie_ct) : "";
+  $("t_fixs").value = CFG.fix_sommer_ct > 0 ? de(CFG.fix_sommer_ct) : "";
+  markiereTyp(CFG.tarif_typ === "fix" ? "fix" : "dyn");
   $("t_fix").value = CFG.fix_ct > 0 ? de(CFG.fix_ct) : "";
   $("t_fixbrutto").checked = CFG.fix_brutto !== false;
   $("t_pcrow").classList.toggle("hidden", !amPC);
@@ -1746,12 +1821,48 @@ $("t_reg").addEventListener("change", () => {
   presetInfo();
 });
 $("t_netz").addEventListener("input", () => { regComp = null; });
+$("t_fixsel").addEventListener("change", () => {
+  const t = PRESETS && PRESETS.fixtarife &&
+            PRESETS.fixtarife.find(x => x.id === $("t_fixsel").value);
+  if (t) {
+    $("t_fixe").value = de(t.ct_netto * 1.2);
+    $("t_fixs").value = t.sommer_ct_netto ? de(t.sommer_ct_netto * 1.2) : "";
+  }
+  presetInfo();
+});
 $("tarifbtn").addEventListener("click", openTarif);
 for (const id of ["t_cancel", "t_abort"])
   $(id).addEventListener("click", () => $("tarifdlg").classList.add("hidden"));
 $("tarifdlg").addEventListener("click", e => {
   if (e.target === $("tarifdlg")) $("tarifdlg").classList.add("hidden");
 });
+let TYP = "dyn";
+function markiereTyp(t) {
+  TYP = (t === "fix") ? "fix" : "dyn";
+  document.querySelector(".dlg").dataset.typ = TYP;
+  for (const b of $("t_typ").children) b.classList.toggle("on", b.dataset.v === TYP);
+  $("t_vglkopf").textContent = TYP === "fix" ? "Vergleich mit dynamischem Tarif"
+                                             : "Vergleich mit Fixtarif";
+  $("t_formel").innerHTML = (TYP === "fix"
+      ? "Formel: Energiepreis + Netzentgelt + Abgaben. Auch mit Fixtarif ändert sich "
+        + "der Preis im Tagesverlauf — von April bis September ist das Netzentgelt "
+        + "zwischen 10 und 16 Uhr um 20 % niedriger."
+      : "Formel: (Börsenpreis + Aufschlag) × MwSt + Netzentgelt + Abgaben.")
+    + " Alle Werte bitte <b>brutto</b> eintragen. Nicht enthalten sind Beträge, die "
+    + "nicht am Verbrauch hängen: Netz-Grundpreis (64,80 €/Jahr), Messentgelt und die "
+    + "Erneuerbaren-Förderpauschale.";
+}
+for (const b of $("t_typ").children)
+  b.addEventListener("click", () => markiereTyp(b.dataset.v));
+function fuelleFixListe() {
+  const sel = $("t_fixsel");
+  if (!PRESETS || !PRESETS.fixtarife) { sel.innerHTML = "<option>— selbst eintragen —</option>"; return; }
+  let gewaehlt = "";
+  try { gewaehlt = (JSON.parse(localStorage.gmTarif || "{}").p_fix) || ""; } catch (e) {}
+  sel.innerHTML = '<option value="">— selbst eintragen —</option>' +
+    PRESETS.fixtarife.map(t => `<option value="${t.id}"${t.id === gewaehlt ? " selected" : ""}>` +
+      `${t.name} (${t.region})</option>`).join("");
+}
 function markiereTheme() {
   const m = themeMode();
   for (const b of $("t_theme").children) b.classList.toggle("on", b.dataset.v === m);
@@ -1764,6 +1875,9 @@ $("t_save").addEventListener("click", () => {
     netzentgelt_ct: pn($("t_netz").value, 0, 50, DEFAULTS.netzentgelt_ct),
     mwst: 1 + pn($("t_mwst").value, 0, 40, 20) / 100,
     abgaben_ct: pn($("t_abg").value, 0, 20, DEFAULTS.abgaben_ct),
+    tarif_typ: TYP,
+    fix_energie_ct: $("t_fixe").value.trim() === "" ? 0 : pn($("t_fixe").value, 0, 200, 0),
+    fix_sommer_ct: $("t_fixs").value.trim() === "" ? 0 : pn($("t_fixs").value, 0, 200, 0),
     price_cheap: pn($("t_bil").value, 0, 199, DEFAULTS.price_cheap),
     price_expensive: pn($("t_teu").value, 1, 200, DEFAULTS.price_expensive),
     best_window_hours: Math.round(pn($("t_std").value, 1, 9, 3)),
@@ -1780,6 +1894,7 @@ $("t_save").addEventListener("click", () => {
     t.netz_verlust_ct = regComp.vl;
     if (regComp.sap != null) t.netz_snap_ap_ct = regComp.sap;
   }
+  t.p_fix = $("t_fixsel") ? $("t_fixsel").value : "";
   t.p_anb = $("t_anb") ? $("t_anb").value : "";
   t.p_reg = $("t_reg") ? $("t_reg").value : "";
   localStorage.gmTarif = JSON.stringify(t);

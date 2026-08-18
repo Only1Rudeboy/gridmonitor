@@ -54,7 +54,10 @@ günstigsten?** — **Und was hat mich das am Monatsende wirklich gekostet?**
 - **Selbst-Aktualisierung** — die App lädt neue Fassungen selbst und installiert sie
 - **Hell und dunkel** — mit einem Tipp umschaltbar; beim ersten Start richtet sich die
   App nach der Geräteeinstellung
-- **Eigener Tarif** (⚙ Mein Tarif) mit Presets für ganz Österreich
+- **Dynamischer Tarif oder Fixpreis** — beides wählbar; auch beim Fixtarif zeigt die
+  App die günstigeren Stunden (SNAP und Sommertarife)
+- **Eigener Tarif** (⚙ Mein Tarif) mit Presets für ganz Österreich: 7 dynamische
+  Tarife, 11 Fixtarife, alle 14 Netzgebiete
 - **Warnung bei veralteten Daten**
 
 ## 💶 Wie der Preis gerechnet wird
@@ -95,10 +98,34 @@ das Verlustentgelt. Der SNAP gilt **tarifunabhängig**, setzt aber viertelstünd
 gemessene und vom Netzbetreiber ausgelesene Werte voraus; Mengen in einer
 Energiegemeinschaft sind ausgenommen. Die App rechnet ihn zeitgenau mit.
 
-## 📊 Monatsvergleich gegen einen Fixtarif
+## 📌 Fixtarif oder dynamisch — beides geht
 
-Trägst du unter „⚙ Mein Tarif" den Energiepreis eines Fixtarifs ein, rechnet die App
-Monat für Monat aus, ob sich der dynamische Tarif gelohnt hat.
+Unter „⚙ Mein Tarif" wählst du zwischen **Dynamisch** (Börsenpreis) und **Fixpreis**.
+
+Auch mit einem Fixtarif lohnt sich die App: Der Endpreis ist nämlich **nicht** den ganzen
+Tag gleich. Von April bis September ist das Netzentgelt zwischen 10 und 16 Uhr um 20 %
+niedriger (SNAP) — und manche Anbieter senken in genau diesem Fenster zusätzlich den
+Energiepreis. Beispiel VKW Strom Duo in Vorarlberg:
+
+| Zeit | Energie | Netz | Abgaben | **Endpreis** |
+|---|---|---|---|---|
+| normal | 11,28 ct | 6,42 ct | 0,86 ct | **18,56 ct/kWh** |
+| 10–16 Uhr, Apr–Sep | 10,08 ct | 5,14 ct | 0,86 ct | **16,08 ct/kWh** |
+
+Das sind 2,48 ct Unterschied — die App zeigt das Fenster genauso an wie bei einem
+dynamischen Tarif. Außerhalb der Sommermonate ist der Preis konstant; dann sagt die
+App das auch ausdrücklich, statt ein Fenster zu erfinden.
+
+Für 11 gängige Fixtarife sind Startwerte hinterlegt (VKW, Verbund, Salzburg AG,
+Wien Energie, EVN, Energie AG, Energie Steiermark, Kelag, Burgenland Energie, Linz AG,
+TIWAG). Energiepreise ändern sich häufig und hängen vom Vertrag ab — bitte mit der
+eigenen Rechnung abgleichen, der Wert ist frei änderbar.
+
+## 📊 Monatsvergleich — in beide Richtungen
+
+Die App rechnet Monat für Monat aus, welches Tarifmodell günstiger war — egal, welches
+du hast. Als Dynamik-Kunde siehst du, was ein Fixtarif gekostet hätte; als Fixtarif-Kunde,
+was der Börsenpreis gekostet hätte.
 
 **Verglichen wird ausschließlich der Energieanteil** — aus drei Gründen:
 
@@ -114,7 +141,7 @@ Monat für Monat aus, ob sich der dynamische Tarif gelohnt hat.
 |---|---|
 | Dynamisch (Energie) | Σ kWh × (Börse + Aufschlag) × MwSt |
 | Fixtarif (Energie) | Σ **dieselben** kWh × Fixpreis |
-| Ersparnis | Fixtarif − dynamisch, positiv = gespart |
+| Ersparnis | anderes Modell − eigenes, positiv = dein Tarif war günstiger |
 
 **Genauigkeit:** Liegen nur Tageswerte vom Netzbetreiber vor, wird jede kWh mit dem
 Tagesdurchschnitt bewertet — der Betrag ist dann eine Schätzung und wird als solche

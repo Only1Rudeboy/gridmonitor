@@ -85,10 +85,20 @@ Netzebene 7 („nicht gemessene Leistung", der Normalfall im Haushalt):
 In der App entspricht das: Netzentgelt **6,42 ct** brutto (4,960 + 0,393, mal 1,2) und
 Abgaben **0,86 ct** brutto.
 
-**Nicht im Preis pro kWh enthalten**, weil sie nicht am Verbrauch hängen: der Netz-Grundpreis
-von 54,00 €/Jahr netto (bundesweit einheitlich), das Messentgelt (rund 0,60–2,60 €/Monat
-netto je nach Zähler), die Erneuerbaren-Förderpauschale von 19,02 €/Jahr netto sowie die
-Grundgebühr deines Lieferanten.
+**Achtung bei der Elektrizitätsabgabe:** Die Senkung auf 0,10 ct gilt 2026 nur für
+**Haushalte am Hauptwohnsitz**. Für Betriebe und sonstige Lieferungen sind es
+**0,82 ct/kWh** — dann liegen die Abgaben bei **1,73 ct** brutto. Im Tarif-Dialog wird das
+über die Auswahl „Anschluss: Haushalt / Betrieb" gesetzt.
+
+**Grundgebühren** hängen nicht am Verbrauch, stehen aber auf jeder Rechnung: Grundpreis des
+Lieferanten, Netz-Grundpreis (54,00 €/Jahr netto, bundesweit einheitlich), Messentgelt
+(rund 19–31 €/Jahr netto), Erneuerbaren-Förderpauschale (19,02 €/Jahr netto) und der
+Leistungsanteil des Erneuerbaren-Förderbeitrags (3,80 €/Jahr netto). Trägt man die Summe
+brutto im Feld „Grundgebühren" ein, verteilt die App sie gleichmäßig auf die Tage — damit
+stimmt der Monatsbetrag mit der Rechnung überein.
+
+*An einer echten VKW-Monatsrechnung gegengeprüft: Das Modell trifft den Rechnungsbetrag
+auf 2 Cent genau (80,58 € gegen 80,60 €).*
 
 **SNAP (Sommer-Nieder-Arbeitspreis):** Von 1. April bis 30. September gilt täglich von
 10 bis 16 Uhr ein verringerter **Netz**-Arbeitspreis. Die Verordnung gibt dafür eigene

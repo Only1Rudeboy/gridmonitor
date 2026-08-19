@@ -446,8 +446,15 @@ if(_t==="light"||_t==="dark")document.documentElement.dataset.theme=_t;}catch(e)
           <input id="t_netz" inputmode="decimal"></div>
         <div class="drow dynonly"><span>MwSt<small>Prozent</small></span>
           <input id="t_mwst" inputmode="decimal"></div>
+        <div class="drow"><span>Anschluss<small>bestimmt die Stromsteuer</small></span>
+          <select id="t_anschluss">
+            <option value="haushalt">Haushalt (Hauptwohnsitz)</option>
+            <option value="betrieb">Betrieb / sonstige</option>
+          </select></div>
         <div class="drow"><span>Abgaben<small>ct/kWh, brutto — Ökostrom + Stromsteuer</small></span>
           <input id="t_abg" inputmode="decimal"></div>
+        <div class="drow"><span>Grundgebühren<small>€/Jahr brutto, ohne Verbrauchsbezug</small></span>
+          <input id="t_grund" inputmode="decimal" placeholder="—"></div>
         <div class="drow sw-row"><span>SNAP-Rabatt<small>Apr–Sep, 10–16 Uhr</small></span>
           <label class="sw"><input type="checkbox" id="t_snap"><i></i></label></div>
         <p class="dsecnote" id="t_formel">Formel: (Börsenpreis + Aufschlag) × MwSt + Netzentgelt + Abgaben.
@@ -511,6 +518,7 @@ const DEFAULTS = {
   // (4,96 Arbeitspreis + 0,393 Verlustentgelt) × 1,2 = 6,42 ct/kWh.
   // abgaben_ct ist ebenfalls brutto: Erneuerbaren-Förderbeitrag + Elektrizitätsabgabe.
   aufschlag_ct: 1.20, netzentgelt_ct: 6.42, abgaben_ct: 0.86, mwst: 1.20,
+  grundgebuehr_eur: 0,         // brutto pro Jahr, alles ohne Verbrauchsbezug
   tarif_typ: "dyn",            // "dyn" = Börsenpreis, "fix" = fester Energiepreis
   fix_energie_ct: 0,           // brutto; nur bei tarif_typ "fix"
   fix_sommer_ct: 0,            // brutto; verbilligter Sommertarif 10–16 Uhr, 0 = keiner
@@ -1135,7 +1143,9 @@ function renderVerb() {
   $("verbn").textContent = "Smart Meter · Stand " +
     new Date(days[days.length - 1].date + "T12:00:00").toLocaleDateString("de-AT",
       {day: "2-digit", month: "2-digit"});
-  $("verbsum").innerHTML = `<b>Σ ${days.length} Tage: ${de(eur)} € · ${de(kwh, 1)} kWh</b><br>` +
+  const fixSum = days.reduce((a, d) => a + (+d.fix || 0), 0);
+  $("verbsum").innerHTML = `<b>Σ ${days.length} Tage: ${de(eur)} € · ${de(kwh, 1)} kWh</b>` +
+    (fixSum > 0 ? ` <span style="color:var(--dim)">(davon ${de(fixSum)} € Grundgebühren)</span>` : "") + "<br>" +
     (exact ? "15-Minuten-genau aus deinen Zählerdaten"
            : "≈ Tagesverbrauch × Tages-Ø-Preis — 15-Minuten-Werte folgen nach der PIN-Freischaltung") +
     " · Daten bleiben lokal (nur vom eigenen PC geladen)";
@@ -1223,6 +1233,9 @@ function renderMonat() {
   let hinweis = "Verglichen wird nur der <b>Energieanteil</b>. Das Netzentgelt (" +
     de(m.netz_eur) + " € in diesem Zeitraum) zahlst du in beiden Tarifen gleich — auch " +
     "der SNAP-Rabatt gehört dem Netz, nicht dem Tarif.";
+  if (m.fix_eur > 0)
+    hinweis += " Dazu kommen " + de(m.fix_eur) + " € Grundgebühren, die nicht am " +
+      "Verbrauch hängen.";
   if (grob) {
     hinweis += "<br><b>Schätzung:</b> Ohne Viertelstundenwerte wird jede kWh mit dem " +
       "Tagesdurchschnitt bewertet. Wie hoch der Betrag wirklich ist, hängt davon ab, zu " +
@@ -1779,6 +1792,8 @@ function openTarif() {
   $("t_netz").value = de(CFG.netzentgelt_ct);
   $("t_mwst").value = de((CFG.mwst - 1) * 100, 0);
   $("t_abg").value = de(abgabenCt());
+  $("t_grund").value = CFG.grundgebuehr_eur > 0 ? de(CFG.grundgebuehr_eur) : "";
+  $("t_anschluss").value = Math.abs(abgabenCt() - 1.73) < 0.05 ? "betrieb" : "haushalt";
   $("t_bil").value = de(CFG.price_cheap, 0);
   $("t_teu").value = de(CFG.price_expensive, 0);
   $("t_std").value = CFG.best_window_hours;
@@ -1821,6 +1836,12 @@ $("t_reg").addEventListener("change", () => {
   presetInfo();
 });
 $("t_netz").addEventListener("input", () => { regComp = null; });
+$("t_anschluss").addEventListener("change", e => {
+  // Elektrizitätsabgabe: 0,10 ct Haushalt am Hauptwohnsitz, sonst 0,82 ct (netto)
+  const strom = e.target.value === "betrieb" ? 0.82 : 0.10;
+  const oeko = 0.583 + 0.037;                    // Erneuerbaren-Förderbeitrag
+  $("t_abg").value = de(Math.round((strom + oeko) * 1.2 * 100) / 100);
+});
 $("t_fixsel").addEventListener("change", () => {
   const t = PRESETS && PRESETS.fixtarife &&
             PRESETS.fixtarife.find(x => x.id === $("t_fixsel").value);
@@ -1875,6 +1896,8 @@ $("t_save").addEventListener("click", () => {
     netzentgelt_ct: pn($("t_netz").value, 0, 50, DEFAULTS.netzentgelt_ct),
     mwst: 1 + pn($("t_mwst").value, 0, 40, 20) / 100,
     abgaben_ct: pn($("t_abg").value, 0, 20, DEFAULTS.abgaben_ct),
+    grundgebuehr_eur: $("t_grund").value.trim() === "" ? 0
+                      : pn($("t_grund").value, 0, 3000, 0),
     tarif_typ: TYP,
     fix_energie_ct: $("t_fixe").value.trim() === "" ? 0 : pn($("t_fixe").value, 0, 200, 0),
     fix_sommer_ct: $("t_fixs").value.trim() === "" ? 0 : pn($("t_fixs").value, 0, 200, 0),

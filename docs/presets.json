@@ -183,7 +183,7 @@
   "netz_grundpreis_eur_jahr_netto": 54.0,
   "netz_grundpreis_hinweis": "Pauschale für die nicht gemessene Leistung, bundesweit einheitlich 54,00 €/Jahr netto (64,80 € brutto). Dazu kommen ein Messentgelt je Zählpunkt (netzbetreiberabhängig, rund 0,60–2,60 €/Monat netto) und die Erneuerbaren-Förderpauschale von 19,02 €/Jahr netto. Diese Beträge hängen nicht am Verbrauch und stecken deshalb NICHT im ct/kWh-Preis.",
   "abgaben_ct": 0.86,
-  "abgaben_hinweis": "Zusätzlich zu den Netzentgelten fallen pro kWh an: Erneuerbaren-Förderbeitrag 0,583 ct auf den Arbeitspreis + 0,037 ct auf das Verlustentgelt (Erneuerbaren-Förderbeitragsverordnung 2026) sowie die Elektrizitätsabgabe. Diese ist 2026 für Haushalte am Hauptwohnsitz befristet auf 0,10 ct/kWh gesenkt (sonst 1,50 ct) — ab 2027 wieder höher. Summe netto 0,72 ct, brutto 0,86 ct/kWh.",
+  "abgaben_hinweis": "Pro kWh zusätzlich zum Netzentgelt: Erneuerbaren-Förderbeitrag 0,583 ct auf den Arbeitspreis + 0,037 ct auf das Verlustentgelt (Erneuerbaren-Förderbeitragsverordnung 2026) sowie die Elektrizitätsabgabe. Die ist 2026 für Haushalte am Hauptwohnsitz auf 0,10 ct/kWh gesenkt, für Betriebe und sonstige Lieferungen beträgt sie 0,82 ct/kWh. Daraus: 0,86 ct brutto für Haushalte, 1,73 ct brutto für Betriebe. Ab 2027 steigt die Elektrizitätsabgabe wieder — dann neu prüfen.",
   "fixtarife": [
     {
       "id": "vkw_duo",
@@ -295,5 +295,7 @@
       "info": "monatlich neu festgelegt — Wert jeden Monat nachtragen"
     }
   ],
-  "fix_hinweis": "Startwerte für gängige Fixtarife, Stand siehe je Tarif. Energiepreise ändern sich häufig und hängen vom konkreten Vertrag ab (Rabatte, Bindung, Bestands- oder Neukunde). Bitte immer mit der eigenen Rechnung abgleichen — der Wert ist frei änderbar. Netzentgelt, Abgaben und der SNAP-Rabatt gelten unabhängig vom Tarif."
+  "fix_hinweis": "Startwerte für gängige Fixtarife, Stand siehe je Tarif. Energiepreise ändern sich häufig und hängen vom konkreten Vertrag ab (Rabatte, Bindung, Bestands- oder Neukunde). Bitte immer mit der eigenen Rechnung abgleichen — der Wert ist frei änderbar. Netzentgelt, Abgaben und der SNAP-Rabatt gelten unabhängig vom Tarif.",
+  "abgaben_ct_betrieb": 1.73,
+  "grundgebuehr_hinweis": "Nicht am Verbrauch hängende Beträge, die trotzdem auf der Rechnung stehen: Grundpreis des Lieferanten, Netz-Grundpreis (54,00 €/Jahr netto, bundesweit einheitlich), Messentgelt (rund 19–31 €/Jahr netto je nach Zähler), Erneuerbaren-Förderpauschale (19,02 €/Jahr netto) und der Leistungsanteil des Erneuerbaren-Förderbeitrags (3,80 €/Jahr netto). Zusammen brutto im Feld „Grundgebühren“ eintragen — die App verteilt sie gleichmäßig auf die Tage."
 }

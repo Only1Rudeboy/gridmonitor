@@ -183,7 +183,7 @@
   "netz_grundpreis_eur_jahr_netto": 54.0,
   "netz_grundpreis_hinweis": "Pauschale für die nicht gemessene Leistung, bundesweit einheitlich 54,00 €/Jahr netto (64,80 € brutto). Dazu kommen ein Messentgelt je Zählpunkt (netzbetreiberabhängig, rund 0,60–2,60 €/Monat netto) und die Erneuerbaren-Förderpauschale von 19,02 €/Jahr netto. Diese Beträge hängen nicht am Verbrauch und stecken deshalb NICHT im ct/kWh-Preis.",
   "abgaben_ct": 0.86,
-  "abgaben_hinweis": "Pro kWh zusätzlich zum Netzentgelt: Erneuerbaren-Förderbeitrag 0,583 ct auf den Arbeitspreis + 0,037 ct auf das Verlustentgelt (Erneuerbaren-Förderbeitragsverordnung 2026) sowie die Elektrizitätsabgabe. Die ist 2026 für Haushalte am Hauptwohnsitz auf 0,10 ct/kWh gesenkt, für Betriebe und sonstige Lieferungen beträgt sie 0,82 ct/kWh. Daraus: 0,86 ct brutto für Haushalte, 1,73 ct brutto für Betriebe. Ab 2027 steigt die Elektrizitätsabgabe wieder — dann neu prüfen.",
+  "abgaben_hinweis": "Pro kWh zusätzlich zum Netzentgelt: Erneuerbaren-Förderbeitrag 0,583 ct auf den Arbeitspreis + 0,037 ct auf das Verlustentgelt (Erneuerbaren-Förderbeitragsverordnung 2026) sowie die Elektrizitätsabgabe. Die ist 2026 befristet gesenkt: 0,10 ct/kWh für natürliche Personen, deren Zählpunkt eines der Lastprofile H0, HA oder HF trägt — 0,82 ct/kWh für alle übrigen Lieferungen (§ 7 Abs. 16 Elektrizitätsabgabegesetz idF BGBl. I Nr. 95/2025 i.V.m. § 4 Abs. 1 und Anlage I Stromkostenzuschussgesetz). Daraus: 0,86 ct brutto bzw. 1,73 ct brutto. Das Lastprofil steht auf der Netzrechnung. Ab 2027 gilt wieder der volle Satz von 1,50 ct — dann neu prüfen.",
   "fixtarife": [
     {
       "id": "vkw_duo",

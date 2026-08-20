@@ -446,10 +446,10 @@ if(_t==="light"||_t==="dark")document.documentElement.dataset.theme=_t;}catch(e)
           <input id="t_netz" inputmode="decimal"></div>
         <div class="drow dynonly"><span>MwSt<small>Prozent</small></span>
           <input id="t_mwst" inputmode="decimal"></div>
-        <div class="drow"><span>Anschluss<small>bestimmt die Stromsteuer</small></span>
+        <div class="drow"><span>Lastprofil<small>steht auf deiner Netzrechnung</small></span>
           <select id="t_anschluss">
-            <option value="haushalt">Haushalt (Hauptwohnsitz)</option>
-            <option value="betrieb">Betrieb / sonstige</option>
+            <option value="haushalt">H0 / HA / HF — Haushalt</option>
+            <option value="betrieb">G, L oder anderes Profil</option>
           </select></div>
         <div class="drow"><span>Abgaben<small>ct/kWh, brutto — Ökostrom + Stromsteuer</small></span>
           <input id="t_abg" inputmode="decimal"></div>
@@ -1837,7 +1837,8 @@ $("t_reg").addEventListener("change", () => {
 });
 $("t_netz").addEventListener("input", () => { regComp = null; });
 $("t_anschluss").addEventListener("change", e => {
-  // Elektrizitätsabgabe: 0,10 ct Haushalt am Hauptwohnsitz, sonst 0,82 ct (netto)
+  // Elektrizitätsabgabe 2026: 0,10 ct für natürliche Personen mit Lastprofil
+  // H0/HA/HF, sonst 0,82 ct (netto) — § 7 Abs. 16 Elektrizitätsabgabegesetz
   const strom = e.target.value === "betrieb" ? 0.82 : 0.10;
   const oeko = 0.583 + 0.037;                    // Erneuerbaren-Förderbeitrag
   $("t_abg").value = de(Math.round((strom + oeko) * 1.2 * 100) / 100);

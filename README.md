@@ -85,10 +85,14 @@ Netzebene 7 („nicht gemessene Leistung", der Normalfall im Haushalt):
 In der App entspricht das: Netzentgelt **6,42 ct** brutto (4,960 + 0,393, mal 1,2) und
 Abgaben **0,86 ct** brutto.
 
-**Achtung bei der Elektrizitätsabgabe:** Die Senkung auf 0,10 ct gilt 2026 nur für
-**Haushalte am Hauptwohnsitz**. Für Betriebe und sonstige Lieferungen sind es
-**0,82 ct/kWh** — dann liegen die Abgaben bei **1,73 ct** brutto. Im Tarif-Dialog wird das
-über die Auswahl „Anschluss: Haushalt / Betrieb" gesetzt.
+**Achtung bei der Elektrizitätsabgabe:** Der reguläre Satz von 1,50 ct/kWh ist für 2026
+befristet gesenkt — auf **0,10 ct** für natürliche Personen, deren Zählpunkt eines der
+Lastprofile **H0, HA oder HF** trägt, und auf **0,82 ct** für alle übrigen Lieferungen
+([§ 7 Abs. 16 Elektrizitätsabgabegesetz idF BGBl. I Nr. 95/2025](https://www.ris.bka.gv.at/Dokumente/BgblAuth/BGBLA_2025_I_95/BGBLA_2025_I_95.pdf)
+i. V. m. § 4 Abs. 1 und Anlage I Stromkostenzuschussgesetz). Maßgeblich ist also das
+**Lastprofil**, nicht die Vertragsbezeichnung — es steht auf der Netzrechnung. Daraus
+ergeben sich Abgaben von **0,86 ct** bzw. **1,73 ct** brutto; im Tarif-Dialog wird das über
+die Auswahl „Lastprofil" gesetzt. **Ab 2027 gilt wieder der volle Satz.**
 
 **Grundgebühren** hängen nicht am Verbrauch, stehen aber auf jeder Rechnung: Grundpreis des
 Lieferanten, Netz-Grundpreis (54,00 €/Jahr netto, bundesweit einheitlich), Messentgelt
